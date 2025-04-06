@@ -87,17 +87,13 @@ export class AddCategoryComponent implements OnInit {
     ngOnInit(): void {
         this.budgetService.getAllBudgets().subscribe({
             next: (res) => {
-                console.log('Budgets resp:', res);
-                this.budgets = res || [];
+              this.budgets = res.content || [];
             },
             error: (err) => {
                 console.error('Error loading budgets:', err);
             }
         });
 
-
-        console.log('Budgets:', this.budgets);
-        console.log('Categories:', this.categories);
     }
 
     /**
@@ -113,7 +109,6 @@ export class AddCategoryComponent implements OnInit {
 
         this.budgetService.createCategory(categoryData).subscribe({
             next: (response) => {
-                console.log('Category created:', response);
                 this.router.navigate(['/']);
             },
             error: (err) => {

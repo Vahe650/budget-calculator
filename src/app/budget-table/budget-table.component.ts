@@ -36,7 +36,7 @@ export class BudgetTableComponent implements OnInit {
         this.apiService.getAllBudgets().subscribe({
             next: (res) => {
                 console.log('Budgets from backend:', res);
-                this.budgets = res || [];
+                this.budgets = res.content || [];
             },
             error: (err) => {
                 console.error('Error fetching budgets:', err);

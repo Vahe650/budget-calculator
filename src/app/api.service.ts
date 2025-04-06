@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import {PaginatedResponse} from "./model/page-model";
+import {Budget} from "./model/budget";
 
 /**
  * Represents the request object sent to the PATCH /api/cell endpoint
@@ -43,8 +45,8 @@ export class ApiService {
     return this.http.get<any>(this.categoryApiUrl + `?nestingLevel=${nestingLevel}&parentId=${parentId}`);
   }
 
-    getAllBudgets(): Observable<any[]> {
-        return this.http.get<any[]>(this.budgetsApiUrl + '/full');
+    getAllBudgets(): Observable<PaginatedResponse<Budget>> {
+        return this.http.get<PaginatedResponse<Budget>>(this.budgetsApiUrl);
     }
 
     deleteBudget(budgetId: number): Observable<any[]> {
