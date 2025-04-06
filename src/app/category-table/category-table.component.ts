@@ -68,10 +68,10 @@ interface DisplayNode {
         MatButtonModule,
         MatInputModule,
     ],
-    templateUrl: './budget-table.component.html',
-    styleUrls: ['./budget-table.component.css'],
+    templateUrl: './category-table.component.html',
+    styleUrls: ['./category-table.component.css'],
 })
-export class BudgetTableComponent implements OnInit {
+export class CategoryTableComponent implements OnInit {
 
     displayedColumns = [
         'name', 'tax', 'jan', 'feb', 'mar', 'apr', 'may', 'jun',
@@ -346,6 +346,10 @@ export class BudgetTableComponent implements OnInit {
 
     goToAddCategory(): void {
         this.router.navigate(['/add-category']);
+    }
+
+    goToBudgets(): void {
+        this.router.navigate(['/budgets']);
     }
 
     /**

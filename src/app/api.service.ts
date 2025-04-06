@@ -43,6 +43,10 @@ export class ApiService {
         return this.http.get<any[]>(this.budgetsApiUrl + '/full');
     }
 
+    deleteBudget(budgetId: number): Observable<any[]> {
+        return this.http.delete<any[]>(`${this.budgetsApiUrl}/${budgetId}`);
+    }
+
     /**
      * Send a PATCH request to update multiple cells at once.
      * The backend expects an array of BatchCellDto objects.

@@ -124,14 +124,24 @@ input:focus {outline:none!important;}
     width: 80px;
 }
 
-.edit-button {
+.button {
     color: white !important;
-    background-color: green !important;
     margin-left: 1%;
 }
 
-.save-button {
+.button {
     color: white !important;
-    background-color: orange !important;
     margin-left: 1%;
+}
+
+.edit-button {
+    background-color: green !important;
+}
+
+.save-button {
+    background-color: orange !important;
+}
+
+.budget-button {
+    background-color: red !important;
 }

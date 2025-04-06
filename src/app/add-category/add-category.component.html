@@ -3,10 +3,8 @@
 
     <div class="form-container">
 
-        <!-- First row: Budget selection + Parent Category selection -->
         <div class="form-row">
 
-            <!-- Budget ID Field => show a dropdown of budgets by name -->
             <div class="form-group">
                 <label for="budget-id">Budget:</label>
                 <select id="budget-id" [(ngModel)]="newCategory.budgetId">
@@ -17,12 +15,10 @@
                 </select>
             </div>
 
-            <!-- Parent ID Field => shown only if type is 'revenue' -->
             <div class="form-group" *ngIf="newCategory.type === 'revenue'">
                 <label for="parent-id">Parent Category:</label>
                 <select id="parent-id" [(ngModel)]="newCategory.parentId">
                     <option [ngValue]="null">-- No Parent --</option>
-                    <!-- Populate from categories[] array in TS -->
                     <option *ngFor="let c of categories" [ngValue]="c.id">
                         {{ c.name }}
                     </option>
@@ -31,15 +27,12 @@
 
         </div>
 
-        <!-- Second row: Name + Type -->
         <div class="form-row">
-            <!-- Name Field -->
             <div class="form-group">
                 <label for="category-name">Nosaukums:</label>
                 <input type="text" id="category-name" [(ngModel)]="newCategory.name"/>
             </div>
 
-            <!-- Type Selection -->
             <div class="form-group">
                 <label>Tips:</label>
                 <select [(ngModel)]="newCategory.type">
@@ -52,7 +45,6 @@
 
     </div>
 
-    <!-- Value Type Selection (Vienības) -->
     <div class="form-group">
         <label>Vienības:</label>
         <div>
@@ -77,13 +69,11 @@
         </div>
     </div>
 
-    <!-- Tax Field -->
     <div class="form-group">
         <label for="category-tax">Tax:</label>
         <input type="number" id="category-tax" [(ngModel)]="newCategory.taxRate"/>
     </div>
 
-    <!-- Monthly Fields -->
     <div class="form-container">
         <div class="form-row">
             <div class="form-group">
@@ -140,7 +130,6 @@
         </div>
     </div>
 
-    <!-- Submit and Cancel Buttons -->
     <div class="buttons-row">
         <button type="button" class="save-btn" (click)="saveCategory()">Save</button>
         <button type="button" class="cancel-btn" (click)="cancel()">Cancel</button>

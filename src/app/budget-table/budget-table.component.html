@@ -1,11 +1,10 @@
 <div class="budget-table-container">
     <h2>All Budgets</h2>
+    <button mat-raised-button class="categories-button" (click)="goToCategories()">Categories</button>
 
     <table>
         <thead>
         <tr>
-            <!-- # => a row index or ID.
-                 If you want real DB ID, display {{ b.id }} instead. -->
             <th>#</th>
             <th>Budžeta nosaukums</th>
             <th>Gads</th>
@@ -17,7 +16,6 @@
         </thead>
         <tbody>
         <tr *ngFor="let b of budgets; let i = index">
-            <!-- If you want to show the DB ID, use b.id instead of i+1 -->
             <td>{{ i + 1 }}</td>
             <td>{{ b.name }}</td>
             <td>{{ b.year }}</td>

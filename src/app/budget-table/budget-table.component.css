@@ -2,7 +2,6 @@
     margin: 20px;
 }
 
-/* Basic styling to match the Excel-like layout */
 table {
     width: 80%;
     border-collapse: collapse;
@@ -16,7 +15,7 @@ th, td {
 }
 
 th {
-    background-color: #d0e2c6; /* light greenish background */
+    background-color: #d0e2c6;
 }
 
 .delete-button {
@@ -33,4 +32,9 @@ th {
     border: none;
     padding: 4px 8px;
     cursor: pointer;
+}
+
+.categories-button {
+    color: white !important;
+    background-color: green !important;
 }

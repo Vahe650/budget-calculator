@@ -55,8 +55,8 @@ export class AddCategoryComponent implements OnInit {
         valueType: string[];
     } = {
         name: '',
-        type: 'revenue', // or 'expense'
-        unitType: 'money', // Default unit
+        type: 'revenue',
+        unitType: 'money',
         taxRate: 0,
         jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
         jun: 0, jul: 0, aug: 0, sep: 0, oct: 0,
@@ -88,7 +88,6 @@ export class AddCategoryComponent implements OnInit {
         this.budgetService.getAllBudgets().subscribe({
             next: (res) => {
                 console.log('Budgets resp:', res);
-                // Directly assign the response array of BudgetShortDto to budgets
                 this.budgets = res || [];
             },
             error: (err) => {
@@ -115,19 +114,17 @@ export class AddCategoryComponent implements OnInit {
      * User clicks “Save” => build category data => call createCategory => navigate
      */
     saveCategory() {
-        // Prepare category data before sending to backend
         const categoryData = {
             ...this.newCategory,
-            // Convert monthly fields to the array-of-month-values structure the server expects
             unitPrice: this.generateUnitPrices(),
-            isAutocomplete: false,           // or your business logic
-            categoryDescription: 'REVENUE'   // or dynamically set
+            isAutocomplete: false,
+            categoryDescription: 'REVENUE'
         };
 
         this.budgetService.createCategory(categoryData).subscribe({
             next: (response) => {
                 console.log('Category created:', response);
-                this.router.navigate(['/']); // Navigate back after saving
+                this.router.navigate(['/']);
             },
             error: (err) => {
                 console.error('Error creating category:', err);
@@ -178,7 +175,7 @@ export class AddCategoryComponent implements OnInit {
         return months.map((month) => {
             return {
                 month: monthMap[month],
-                value: this.newCategory[month]  // read the numeric value
+                value: this.newCategory[month]
             };
         });
     }
