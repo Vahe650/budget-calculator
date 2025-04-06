@@ -1,0 +1,310 @@
+<div class="form-control">
+    <button mat-raised-button color="primary" (click)="goToAddCategory()">+ Add Category</button>
+    <button mat-raised-button class="edit-button">Edit</button>
+    <button mat-raised-button class="save-button" (click)="saveAll()">Save</button>
+
+    <table mat-table [dataSource]="displayData" class="mat-elevation-z8">
+
+        <!-- NAME -->
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Kategorijas</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <span [style.margin-left.px]="item.level * 20"></span>
+
+                <strong class="m-lg-2" *ngIf="item.node.children.length > 0">{{ item.node.name }}</strong>
+                <span class="m-lg-2" *ngIf="item.node.children.length === 0">{{ item.node.name }}</span>
+                <button *ngIf="item.node.children.length > 0"
+                        mat-icon-button
+                        (click)="toggleRow(item.node); $event.stopPropagation()">
+                    <mat-icon
+                            aria-hidden="false"
+                            aria-label="Example home icon"
+                            [fontIcon]="item.node.expanded ? 'remove': 'add'">
+                    </mat-icon>
+                </button>
+            </td>
+        </ng-container>
+
+        <!-- TAX -->
+        <ng-container matColumnDef="tax">
+            <th mat-header-cell *matHeaderCellDef>Tax</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitTax">
+                    {{ item.node.tax }}
+                </ng-container>
+                <ng-template #nonEbitTax>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'tax', $event)">
+                        <input
+                                [value]="item.node.tax"
+                                [disabled]="item.node.editDisabledMap?.tax"
+                                (input)="item.node.tax = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- JAN -->
+        <ng-container matColumnDef="jan">
+            <th mat-header-cell *matHeaderCellDef>Janvāris</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitJan">
+                    {{ item.node.jan }}
+                </ng-container>
+                <ng-template #nonEbitJan>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'jan', $event)">
+                        <input
+                                [value]="item.node.jan"
+                                [disabled]="item.node.editDisabledMap?.jan"
+                                (input)="item.node.jan = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- FEB -->
+        <ng-container matColumnDef="feb">
+            <th mat-header-cell *matHeaderCellDef>Februāris</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitFeb">
+                    {{ item.node.feb }}
+                </ng-container>
+                <ng-template #nonEbitFeb>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'feb', $event)">
+                        <input
+                                [value]="item.node.feb"
+                                [disabled]="item.node.editDisabledMap?.feb"
+                                (input)="item.node.feb = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- MAR -->
+        <ng-container matColumnDef="mar">
+            <th mat-header-cell *matHeaderCellDef>Marts</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitMar">
+                    {{ item.node.mar }}
+                </ng-container>
+                <ng-template #nonEbitMar>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'mar', $event)">
+                        <input
+                                [value]="item.node.mar"
+                                [disabled]="item.node.editDisabledMap?.mar"
+                                (input)="item.node.mar = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- APR -->
+        <ng-container matColumnDef="apr">
+            <th mat-header-cell *matHeaderCellDef>Aprīlis</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitApr">
+                    {{ item.node.apr }}
+                </ng-container>
+                <ng-template #nonEbitApr>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'apr', $event)">
+                        <input
+                                [value]="item.node.apr"
+                                [disabled]="item.node.editDisabledMap?.apr"
+                                (input)="item.node.apr = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- MAY -->
+        <ng-container matColumnDef="may">
+            <th mat-header-cell *matHeaderCellDef>Maijs</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitMay">
+                    {{ item.node.may }}
+                </ng-container>
+                <ng-template #nonEbitMay>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'may', $event)">
+                        <input
+                                [value]="item.node.may"
+                                [disabled]="item.node.editDisabledMap?.may"
+                                (input)="item.node.may = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- JUN -->
+        <ng-container matColumnDef="jun">
+            <th mat-header-cell *matHeaderCellDef>Jūnijs</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitJun">
+                    {{ item.node.jun }}
+                </ng-container>
+                <ng-template #nonEbitJun>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'jun', $event)">
+                        <input
+                                [value]="item.node.jun"
+                                [disabled]="item.node.editDisabledMap?.jun"
+                                (input)="item.node.jun = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- JUL -->
+        <ng-container matColumnDef="jul">
+            <th mat-header-cell *matHeaderCellDef>Jūlijs</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitJul">
+                    {{ item.node.jul }}
+                </ng-container>
+                <ng-template #nonEbitJul>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'jul', $event)">
+                        <input
+                                [value]="item.node.jul"
+                                [disabled]="item.node.editDisabledMap?.jul"
+                                (input)="item.node.jul = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- AUG -->
+        <ng-container matColumnDef="aug">
+            <th mat-header-cell *matHeaderCellDef>Augusts</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitAug">
+                    {{ item.node.aug }}
+                </ng-container>
+                <ng-template #nonEbitAug>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'aug', $event)">
+                        <input
+                                [value]="item.node.aug"
+                                [disabled]="item.node.editDisabledMap?.aug"
+                                (input)="item.node.aug = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- SEP -->
+        <ng-container matColumnDef="sep">
+            <th mat-header-cell *matHeaderCellDef>Septembris</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitSep">
+                    {{ item.node.sep }}
+                </ng-container>
+                <ng-template #nonEbitSep>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'sep', $event)">
+                        <input
+                                [value]="item.node.sep"
+                                [disabled]="item.node.editDisabledMap?.sep"
+                                (input)="item.node.sep = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- OCT -->
+        <ng-container matColumnDef="oct">
+            <th mat-header-cell *matHeaderCellDef>Oktobris</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitOct">
+                    {{ item.node.oct }}
+                </ng-container>
+                <ng-template #nonEbitOct>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'oct', $event)">
+                        <input
+                                [value]="item.node.oct"
+                                [disabled]="item.node.editDisabledMap?.oct"
+                                (input)="item.node.oct = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- NOV -->
+        <ng-container matColumnDef="nov">
+            <th mat-header-cell *matHeaderCellDef>Novembris</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitNov">
+                    {{ item.node.nov }}
+                </ng-container>
+                <ng-template #nonEbitNov>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'nov', $event)">
+                        <input
+                                [value]="item.node.nov"
+                                [disabled]="item.node.editDisabledMap?.nov"
+                                (input)="item.node.nov = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- DEC -->
+        <ng-container matColumnDef="dec">
+            <th mat-header-cell *matHeaderCellDef>Decembris</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <ng-container *ngIf="item.node.type === 'ebit'; else nonEbitDec">
+                    {{ item.node.dec }}
+                </ng-container>
+                <ng-template #nonEbitDec>
+                    <div class="input-style" (click)="toggleCellEdit(item.node, 'dec', $event)">
+                        <input
+                                class="input-field"
+                                [value]="item.node.dec"
+                                [disabled]="item.node.editDisabledMap?.dec"
+                                (input)="item.node.dec = $any($event.target).value"
+                        />
+                    </div>
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- TOTAL => always plain text, no edit icon, for all rows -->
+        <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total YEAR</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                {{ item.node.total }}
+            </td>
+        </ng-container>
+
+        <!-- DELETE -->
+        <ng-container matColumnDef="delete">
+            <th mat-header-cell *matHeaderCellDef>Delete</th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''">
+                <button
+                        mat-button
+                        class="delete-button"
+                        *ngIf="item.node.type !== 'ebit'"
+                        (click)="deleteCategory(item.node)">
+                    DELETE
+                </button>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="expand">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let item" [class]="item.node.children.length > 0 ? 'parent-row': ''"></td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+                mat-row
+                *matRowDef="let item; columns: displayedColumns;"
+                [class.ebit-row]="item.node.type === 'ebit'">
+        </tr>
+    </table>
+</div>

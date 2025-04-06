@@ -1,0 +1,36 @@
+.budget-table-container {
+    margin: 20px;
+}
+
+/* Basic styling to match the Excel-like layout */
+table {
+    width: 80%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #d0e2c6; /* light greenish background */
+}
+
+.delete-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.edit-button {
+    background-color: orange;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+}

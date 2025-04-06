@@ -1,0 +1,35 @@
+<div class="budget-table-container">
+    <h2>All Budgets</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <!-- # => a row index or ID.
+                 If you want real DB ID, display {{ b.id }} instead. -->
+            <th>#</th>
+            <th>Budžeta nosaukums</th>
+            <th>Gads</th>
+            <th>Izveides datums</th>
+            <th>Mainas datums</th>
+            <th>Delete</th>
+            <th>Edit</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let b of budgets; let i = index">
+            <!-- If you want to show the DB ID, use b.id instead of i+1 -->
+            <td>{{ i + 1 }}</td>
+            <td>{{ b.name }}</td>
+            <td>{{ b.year }}</td>
+            <td>{{ b.createdAt }}</td>
+            <td>{{ b.updatedAt }}</td>
+            <td>
+                <button class="delete-button" (click)="deleteBudget(b.id)">Delete</button>
+            </td>
+            <td>
+                <button class="edit-button" (click)="editBudget(b.id)">Edit</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
