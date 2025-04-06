@@ -1,0 +1,5 @@
+<div class="p-3">
+  <button mat-raised-button [class]="isActive('/')? 'button menu-btn-active':'button menu-btn-inactive'" (click)="goToCategories()">Categories</button>
+  <button mat-raised-button [class]="isActive('/add-category')? 'button menu-btn-active':'button menu-btn-inactive'" (click)="goToAddCategory()">+ Add Category</button>
+  <button mat-raised-button [class]="isActive('/budgets')? 'button menu-btn-active':'button menu-btn-inactive'" (click)="goToBudgets()">Budgets</button>
+</div>

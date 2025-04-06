@@ -15,7 +15,7 @@
                 </select>
             </div>
 
-            <div class="form-group" *ngIf="newCategory.type === 'revenue'">
+            <div class="form-group" *ngIf="newCategory.type !== 'revenue'">
                 <label for="parent-id">Parent Category:</label>
                 <select id="parent-id" [(ngModel)]="newCategory.parentId">
                     <option [ngValue]="null">-- No Parent --</option>
@@ -26,7 +26,7 @@
             </div>
 
         </div>
-
+s
         <div class="form-row">
             <div class="form-group">
                 <label for="category-name">Nosaukums:</label>
@@ -131,7 +131,7 @@
     </div>
 
     <div class="buttons-row">
-        <button type="button" class="save-btn" (click)="saveCategory()">Save</button>
-        <button type="button" class="cancel-btn" (click)="cancel()">Cancel</button>
+      <button type="button" class="cancel-btn" (click)="cancel()">Cancel</button>
+      <button type="button" class="save-btn" (click)="saveCategory()">Save</button>
     </div>
 </div>
