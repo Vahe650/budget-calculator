@@ -15,7 +15,7 @@
                 </select>
             </div>
 
-            <div class="form-group" *ngIf="newCategory.type !== 'revenue'">
+            <div class="form-group" *ngIf="newCategory.nestedLevel !== '0'">
                 <label for="parent-id">Parent Category:</label>
                 <select id="parent-id" [(ngModel)]="newCategory.parentId">
                     <option [ngValue]="null">-- No Parent --</option>
@@ -35,10 +35,10 @@ s
 
             <div class="form-group">
                 <label>Tips:</label>
-                <select [(ngModel)]="newCategory.type">
-                    <option value="revenue">Galvenā kategorija</option>
-                    <option value="expense">Apakškategorija</option>
-                    <option value="subcategory">Apakšpozīcija</option>
+                <select [(ngModel)]="newCategory.nestedLevel" (ngModelChange)="getCategories($event)">
+                    <option value="0">Galvenā kategorija</option>
+                    <option value="1">Apakškategorija</option>
+                    <option value="2">Apakšpozīcija</option>
                 </select>
             </div>
         </div>

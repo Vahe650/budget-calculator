@@ -39,6 +39,10 @@ export class ApiService {
         return this.http.get<any>(this.categoriesApiUrl);
     }
 
+  getCategoriesByNestingLevel(nestingLevel: number, parentId: number | string): Observable<any> {
+    return this.http.get<any>(this.categoryApiUrl + `?nestingLevel=${nestingLevel}&parentId=${parentId}`);
+  }
+
     getAllBudgets(): Observable<any[]> {
         return this.http.get<any[]>(this.budgetsApiUrl + '/full');
     }

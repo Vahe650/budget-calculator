@@ -28,7 +28,7 @@ export interface Category {
   nov: number;
   dec: number;
   total: number;
-  type?: 'revenue' | 'expense' | 'ebit';
+  nestingLevel?: 0 | 1 | 2;
   children?: Category[];
   expandable?: boolean;
   expanded?: boolean;
@@ -119,7 +119,9 @@ export class CategoryTableComponent implements OnInit {
    * We also store each cell's ID in cellIdMap so we can do a patch later.
    */
   private transformCategoryDto(dto: any): Category {
-    const cat: Category = {
+    let cells = dto.cells || [];
+
+    let cat: Category = {
       id: dto.id,
       name: dto.name,
       tax: dto.taxRate || 0,
@@ -127,7 +129,7 @@ export class CategoryTableComponent implements OnInit {
       jun: 0, jul: 0, aug: 0, sep: 0, oct: 0,
       nov: 0, dec: 0,
       total: dto?.totalAmount?.priceInMoney || 0,
-      type: 'revenue',
+      nestingLevel: 0,
       expandable: true,
       expanded: true,
       editDisabledMap: {
@@ -142,6 +144,60 @@ export class CategoryTableComponent implements OnInit {
       children: [],
       tempValueMap: {}
     };
+
+    cells.forEach((cell: any) => {
+      if (cell.month === 'JANUARY'){
+        cat.jan = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['jan'] = cell.id;
+      }
+      console.log(cat.jan);
+      if (cell.month === 'FEBRUARY'){
+        cat.feb = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['feb'] = cell.id;
+      }
+      if (cell.month === 'MARCH'){
+        cat.mar = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['mar'] = cell.id;
+      }
+      if (cell.month === 'APRIL'){
+        cat.apr = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['apr'] = cell.id;
+      }
+      if (cell.month === 'MAY'){
+        cat.may = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['may'] = cell.id;
+      }
+      if (cell.month === 'JUNE'){
+        cat.jun = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['jun'] = cell.id;
+      }
+      if (cell.month === 'JULY'){
+        cat.jul = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['jul'] = cell.id;
+      }
+      if (cell.month === 'AUGUST'){
+        cat.aug = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['aug'] = cell.id;
+      }
+      if (cell.month === 'SEPTEMBER'){
+        cat.sep = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['sep'] = cell.id;
+      }
+      if (cell.month === 'OCTOBER'){
+        cat.oct = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['oct'] = cell.id;
+      }
+      if (cell.month === 'NOVEMBER'){
+        cat.nov = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['nov'] = cell.id;
+      }
+      if (cell.month === 'DECEMBER'){
+        cat.dec = Number(cell.price?.priceInMoney || 0);
+        cat.cellIdMap!['dec'] = cell.id;
+      }
+
+    })
+
 
     if (dto.cells && Array.isArray(dto.cells)) {
       dto.cells.forEach((cell: any) => {
@@ -213,7 +269,7 @@ export class CategoryTableComponent implements OnInit {
    * Recalculate row totals, then create an EBIT row at the bottom.
    */
   recalculateAll(): void {
-    this.categories = this.categories.filter(cat => cat.type !== 'ebit');
+    this.categories = this.categories.filter(cat => cat.nestingLevel !== 2);
 
     this.categories.forEach(row => this.computeRowTotal(row));
 
@@ -226,7 +282,7 @@ export class CategoryTableComponent implements OnInit {
     let totalRevenueTax = 0, totalExpenseTax = 0;
 
     const accumulate = (node: Category) => {
-      if (node.type === 'revenue') {
+      if (node.nestingLevel === 0) {
         janRev += node.jan;
         febRev += node.feb;
         marRev += node.mar;
@@ -240,7 +296,7 @@ export class CategoryTableComponent implements OnInit {
         novRev += node.nov;
         decRev += node.dec;
         totalRevenueTax += node.tax;
-      } else if (node.type === 'expense') {
+      } else if (node.nestingLevel === 1) {
         janExp += node.jan;
         febExp += node.feb;
         marExp += node.mar;
@@ -263,7 +319,7 @@ export class CategoryTableComponent implements OnInit {
     const ebitRow: Category = {
       id: 0,
       name: 'EBIT',
-      type: 'ebit',
+      nestingLevel: 2,
       tax: 0,
       jan: janRev - janExp,
       feb: febRev - febExp,
@@ -305,6 +361,7 @@ export class CategoryTableComponent implements OnInit {
       node.nov + node.dec;
 
     node.total = sumMonths + node.tax;
+    console.log(node.total);
     node.children?.forEach(child => this.computeRowTotal(child));
   }
 
@@ -330,7 +387,7 @@ export class CategoryTableComponent implements OnInit {
   }
 
   deleteCategory(node: Category) {
-    if (node.type === 'ebit') return;
+    if (node.nestingLevel === 2) return;
     this.budgetService.deleteCategory(node.id).subscribe({
       next: (response) => {
         console.log('Category deleted successfully:', response);
@@ -399,7 +456,7 @@ export class CategoryTableComponent implements OnInit {
    */
   private saveChangesRecursively(nodes: Category[]): void {
     for (const node of nodes) {
-      if (node.type !== 'ebit') {
+      if (node.nestingLevel !== 2) {
         const fields = ['tax', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
         for (const fieldName of fields) {
@@ -482,5 +539,33 @@ export class CategoryTableComponent implements OnInit {
         console.error('Failed to update cell:', err);
       }
     });
+  }
+
+  getClass(item: any) :string {
+
+   if  (item.level  == 0) {
+      return 'parent-row';
+    }
+    if  (item.level  == 1) {
+      return 'sub-row';
+    }
+
+
+    return ''
+
+  }
+
+  getInputClass(item: any): string {
+    if (item.node.name === 'EBIT') {
+      return 'input-style';
+    }
+
+    if  (item.level  == 0) {
+      return 'input-style-parent';
+    }
+    if  (item.level  == 1) {
+      return 'input-style-sub';
+    }
+    return ''
   }
 }

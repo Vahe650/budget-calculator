@@ -22,7 +22,7 @@ export class AddCategoryComponent implements OnInit {
 
     newCategory: {
         name: string;
-        type: string;
+        nestedLevel: string;
         unitType: string;
         taxRate: number;
         jan: number;
@@ -55,7 +55,7 @@ export class AddCategoryComponent implements OnInit {
         valueType: string[];
     } = {
         name: '',
-        type: 'revenue',
+        nestedLevel: '0',
         unitType: 'money',
         taxRate: 0,
         jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
@@ -95,16 +95,6 @@ export class AddCategoryComponent implements OnInit {
             }
         });
 
-        // Also fetch categories if needed
-        this.budgetService.getAllCategories().subscribe({
-            next: (res) => {
-                console.log('Categories resp:', res);
-                this.categories = res || [];
-            },
-            error: (err) => {
-                console.error('Error loading categories:', err);
-            }
-        });
 
         console.log('Budgets:', this.budgets);
         console.log('Categories:', this.categories);
@@ -179,4 +169,26 @@ export class AddCategoryComponent implements OnInit {
             };
         });
     }
+
+  getCategories(event: any) {
+    console.log('getCategories() called',  event);
+    var categories = null;
+    if (this.newCategory.nestedLevel === '1') {
+      categories = this.budgetService.getCategoriesByNestingLevel(0, '');
+    }
+    if (this.newCategory.nestedLevel === '2') {
+      categories = this.budgetService.getCategoriesByNestingLevel(1, '');
+    }
+    if (categories) {
+      categories.subscribe({
+        next: (res) => {
+          console.log('Categories resp:', res);
+          this.categories = res || [];
+        },
+        error: (err) => {
+          console.error('Error loading categories:', err);
+        }
+      });
+    }
+  }
 }

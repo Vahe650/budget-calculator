@@ -99,7 +99,11 @@ input:focus {outline:none!important;}
     background-color: darkgray;
 }
 
-.input-style {
+.sub-row {
+  background-color: #ece1e1;
+}
+
+.input-style-parent {
     display: flex;
     align-items: center;
     width: 100%;
@@ -107,6 +111,26 @@ input:focus {outline:none!important;}
     padding: 0;
     margin: 0;
     background-color: darkgray;
+}
+
+.input-style-sub {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  padding: 0;
+  margin: 0;
+  background-color: #ece1e1;
+}
+
+.input-style-pos {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  padding: 0;
+  margin: 0;
+  background-color: darkgray;
 }
 
 .input-style input {
