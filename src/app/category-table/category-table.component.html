@@ -262,7 +262,7 @@
                 <ng-template #nonEbitDec>
                     <div [class]="getInputClass(item)" (click)="toggleCellEdit(item.node, 'dec', $event)">
                         <input
-                                class="input-field"
+
                                 [value]="item.node.dec"
                                 [disabled]="item.node.editDisabledMap?.dec"
                                 (input)="item.node.dec = $any($event.target).value"

@@ -84,35 +84,51 @@ export class CategoryTableComponent implements OnInit {
   displayData: DisplayNode[] = [];
 
   constructor(
-    private budgetService: ApiService
+    private apiService: ApiService
   ) {
   }
 
   ngOnInit(): void {
-    const pending = this.budgetService.getPendingCategory();
+    const pending = this.apiService.getPendingCategory();
     if (pending) {
       this.categories.push(pending);
-      this.budgetService.clearPendingCategory();
+      this.apiService.clearPendingCategory();
     }
 
     this.loadCategoriesFromServer();
   }
 
-  loadCategoriesFromServer(): void {
-    this.budgetService.getAllCategories().subscribe({
-      next: (response) => {
-        console.log('Fetched categories:', response);
-        const categoryDtos = response || [];
-        const fromServer = categoryDtos.map((dto: any) => this.transformCategoryDto(dto));
-        this.categories = [...this.categories, ...fromServer];
+    loadCategoriesFromServer(): void {
+        this.apiService.getAllCategories().subscribe({
+            next: (response: any[]) => {
+                console.log('Fetched categories:', response);
 
-        this.recalculateAll();
-      },
-      error: (err) => {
-        console.error('Error fetching categories:', err);
-      },
-    });
-  }
+                const allChildIDs = new Set<number>();
+                for (const dto of response) {
+                    if (dto.childCategories && dto.childCategories.length > 0) {
+                        for (const child of dto.childCategories) {
+                            allChildIDs.add(child.id);
+                        }
+                    }
+                }
+
+                const mainCategoryDtos = response.filter((dto: any) => {
+                    return (dto.childCategories && dto.childCategories.length > 0) || !allChildIDs.has(dto.id);
+                });
+
+                const fromServer = mainCategoryDtos.map((dto: any) =>
+                    this.transformCategoryDto(dto)
+                );
+
+                this.categories = fromServer;
+
+                this.recalculateAll();
+            },
+            error: (err) => {
+                console.error('Error fetching categories:', err);
+            },
+        });
+    }
 
   /**
    * Convert a CategoryDto => local Category.
@@ -388,7 +404,7 @@ export class CategoryTableComponent implements OnInit {
 
   deleteCategory(node: Category) {
     if (node.nestingLevel === 2) return;
-    this.budgetService.deleteCategory(node.id).subscribe({
+    this.apiService.deleteCategory(node.id).subscribe({
       next: (response) => {
         console.log('Category deleted successfully:', response);
         this.removeNode(this.categories, node);
@@ -499,7 +515,7 @@ export class CategoryTableComponent implements OnInit {
    * Update the tax value for the category (API call).
    */
   private updateTax(node: Category, newValue: number): void {
-    this.budgetService.updateCategoryTax(node.id, newValue).subscribe({
+    this.apiService.updateCategoryTax(node.id, newValue).subscribe({
       next: (response) => {
         console.log('Tax updated successfully:', response);
       },
@@ -531,7 +547,7 @@ export class CategoryTableComponent implements OnInit {
       }
     ];
 
-    this.budgetService.updateCells(requestBody).subscribe({
+    this.apiService.updateCells(requestBody).subscribe({
       next: (resp) => {
         console.log('Cell updated successfully:', resp);
       },

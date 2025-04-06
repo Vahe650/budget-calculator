@@ -169,3 +169,19 @@ input:focus {outline:none!important;}
 .budget-button {
     background-color: red !important;
 }
+
+div input {
+    height: 12px;
+}
+
+.input-style-sub input {
+    background-color: #ece1e1;
+}
+
+.input-style-parent input {
+    background-color: darkgray;
+}
+
+div input {
+    background-color: white;
+}
