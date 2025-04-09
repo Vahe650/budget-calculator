@@ -1,178 +1,182 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {Router} from '@angular/router';
-import {ApiService} from '../api.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {CategoryService} from '../service/category.service';
 import {FormsModule} from '@angular/forms';
+import {CategoryDescription} from "../model/CategoryDescription";
 
 @Component({
-    selector: 'app-add-category',
-    standalone: true,
-    imports: [
-        CommonModule,
-        FormsModule
-    ],
-    templateUrl: './add-category.component.html',
-    styleUrls: ['./add-category.component.css']
+  selector: 'app-add-category',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+  templateUrl: './add-category.component.html',
+  styleUrls: ['./add-category.component.css']
 })
 export class AddCategoryComponent implements OnInit {
 
-    /** Arrays to store all budgets and categories fetched from the backend */
-    budgets: any[] = [];
-    categories: any[] = [];
+  /** Arrays to store all budgets and categories fetched from the backend */
+  budgets: any[] = [];
+  categories: any[] = [];
 
-    newCategory: {
-        name: string;
-        nestedLevel: string;
-        unitType: string;
-        taxRate: number;
-        jan: number;
-        feb: number;
-        mar: number;
-        apr: number;
-        may: number;
-        jun: number;
-        jul: number;
-        aug: number;
-        sep: number;
-        oct: number;
-        nov: number;
-        dec: number;
-        total: number;
-        unitMoney: boolean;
-        unitTons: boolean;
-        unitPieces: boolean;
-        unitLiters: boolean;
-        priceChange: boolean;
-        expandable: boolean;
-        expanded: boolean;
-        /**
-         * Budget and parent IDs
-         * We will map them from dropdowns to the actual ID, but show names
-         */
-        budgetId: number | null;
-        parentId: number | null;
-        /** The “value types” for the category, e.g. MONEY, WEIGHT, etc. */
-        valueType: string[];
-    } = {
-        name: '',
-        nestedLevel: '0',
-        unitType: 'money',
-        taxRate: 0,
-        jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
-        jun: 0, jul: 0, aug: 0, sep: 0, oct: 0,
-        nov: 0, dec: 0,
-        total: 0,
-        unitMoney: false,
-        unitTons: false,
-        unitPieces: false,
-        unitLiters: false,
-        priceChange: false,
-        expandable: false,
-        expanded: false,
-        budgetId: null,
-        parentId: null,
-        valueType: []
+  newCategory: {
+    name: string;
+    nestedLevel: string;
+    unitType: string;
+    taxRate: number;
+    jan: number;
+    feb: number;
+    mar: number;
+    apr: number;
+    may: number;
+    jun: number;
+    jul: number;
+    aug: number;
+    sep: number;
+    oct: number;
+    nov: number;
+    dec: number;
+    total: number;
+    unitMoney: boolean;
+    unitTons: boolean;
+    unitPieces: boolean;
+    unitLiters: boolean;
+    priceChange: boolean;
+    expandable: boolean;
+    expanded: boolean;
+    /**
+     * Budget and parent IDs
+     * We will map them from dropdowns to the actual ID, but show names
+     */
+    budgetId: number | null;
+    parentId: number | null;
+    /** The “value types” for the category, e.g. MONEY, WEIGHT, etc. */
+    valueType: string[];
+  } = {
+    name: '',
+    nestedLevel: '0',
+    unitType: 'money',
+    taxRate: 0,
+    jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+    jun: 0, jul: 0, aug: 0, sep: 0, oct: 0,
+    nov: 0, dec: 0,
+    total: 0,
+    unitMoney: false,
+    unitTons: false,
+    unitPieces: false,
+    unitLiters: false,
+    priceChange: false,
+    expandable: false,
+    expanded: false,
+    budgetId: null,
+    parentId: null,
+    valueType: []
+  };
+
+  constructor(
+    private router: Router,
+    private categoryService: CategoryService,
+    private activatedRoute: ActivatedRoute,
+  ) {
+  }
+
+  /**
+   * On component init, load all budgets and categories to display
+   * in the <select> dropdowns for “Budget” and “Parent” fields.
+   */
+  ngOnInit(): void {
+
+  }
+
+  /**
+   * User clicks “Save” => build category data => call createCategory => navigate
+   */
+  saveCategory() {
+    this.activatedRoute.params.subscribe(params => {
+      if (params['id']) {
+        this.newCategory.budgetId = params['id'];
+      }
+      console.log(this.newCategory.taxRate);
+      const categoryData
+        = {
+        ...this.newCategory,
+        unitPrice: this.generateUnitPrices(),
+        isAutocomplete: false,
+        taxRate: this.newCategory.taxRate === 0 ? null : this.newCategory.taxRate,
+        categoryDescription: CategoryDescription.TAX
+      };
+
+      console.log(categoryData);
+
+      this.categoryService.createCategory(categoryData).subscribe({
+        next: (response) => {
+          this.router.navigate(['/']);
+        },
+        error: (err) => {
+          console.error('Error creating category:', err);
+        }
+      });
+    })
+  }
+
+  cancel() {
+    this.router.navigate(['/']);
+  }
+
+  /**
+   * Maps selected unit checkboxes to the ValueType enum(s) for the backend
+   */
+  mapUnitToValueType() {
+    const valueType: string[] = [];
+    if (this.newCategory.unitMoney) valueType.push('MONEY');
+    if (this.newCategory.unitTons) valueType.push('WEIGHT');
+    if (this.newCategory.unitLiters) valueType.push('LITERS');
+    if (this.newCategory.unitPieces) valueType.push('PIECES');
+    this.newCategory.valueType = valueType;
+  }
+
+  /**
+   * Convert the monthly fields (jan, feb, etc.) into the format
+   * the backend expects, e.g. [{month: 'JANUARY', value: 123}, ...]
+   */
+  generateUnitPrices() {
+    const monthMap: { [key: string]: string } = {
+      jan: 'JANUARY',
+      feb: 'FEBRUARY',
+      mar: 'MARCH',
+      apr: 'APRIL',
+      may: 'MAY',
+      jun: 'JUNE',
+      jul: 'JULY',
+      aug: 'AUGUST',
+      sep: 'SEPTEMBER',
+      oct: 'OCTOBER',
+      nov: 'NOVEMBER',
+      dec: 'DECEMBER'
     };
 
-    constructor(
-        private router: Router,
-        private budgetService: ApiService
-    ) {
-    }
+    const months: (keyof typeof this.newCategory)[] = [
+      'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+    ];
 
-    /**
-     * On component init, load all budgets and categories to display
-     * in the <select> dropdowns for “Budget” and “Parent” fields.
-     */
-    ngOnInit(): void {
-        this.budgetService.getAllBudgets().subscribe({
-            next: (res) => {
-              this.budgets = res.content || [];
-            },
-            error: (err) => {
-                console.error('Error loading budgets:', err);
-            }
-        });
-
-    }
-
-    /**
-     * User clicks “Save” => build category data => call createCategory => navigate
-     */
-    saveCategory() {
-        const categoryData = {
-            ...this.newCategory,
-            unitPrice: this.generateUnitPrices(),
-            isAutocomplete: false,
-            categoryDescription: 'REVENUE'
-        };
-
-        this.budgetService.createCategory(categoryData).subscribe({
-            next: (response) => {
-                this.router.navigate(['/']);
-            },
-            error: (err) => {
-                console.error('Error creating category:', err);
-            }
-        });
-    }
-
-    cancel() {
-        this.router.navigate(['/']);
-    }
-
-    /**
-     * Maps selected unit checkboxes to the ValueType enum(s) for the backend
-     */
-    mapUnitToValueType() {
-        const valueType: string[] = [];
-        if (this.newCategory.unitMoney) valueType.push('MONEY');
-        if (this.newCategory.unitTons) valueType.push('WEIGHT');
-        if (this.newCategory.unitLiters) valueType.push('LITERS');
-        if (this.newCategory.unitPieces) valueType.push('PIECES');
-        this.newCategory.valueType = valueType;
-    }
-
-    /**
-     * Convert the monthly fields (jan, feb, etc.) into the format
-     * the backend expects, e.g. [{month: 'JANUARY', value: 123}, ...]
-     */
-    generateUnitPrices() {
-        const monthMap: { [key: string]: string } = {
-            jan: 'JANUARY',
-            feb: 'FEBRUARY',
-            mar: 'MARCH',
-            apr: 'APRIL',
-            may: 'MAY',
-            jun: 'JUNE',
-            jul: 'JULY',
-            aug: 'AUGUST',
-            sep: 'SEPTEMBER',
-            oct: 'OCTOBER',
-            nov: 'NOVEMBER',
-            dec: 'DECEMBER'
-        };
-
-        const months: (keyof typeof this.newCategory)[] = [
-            'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
-        ];
-
-        return months.map((month) => {
-            return {
-                month: monthMap[month],
-                value: this.newCategory[month]
-            };
-        });
-    }
+    return months.map((month) => {
+      return {
+        month: monthMap[month],
+        value: this.newCategory[month]
+      };
+    });
+  }
 
   getCategories(event: any) {
-    console.log('getCategories() called',  event);
+    console.log('getCategories() called', event);
     var categories = null;
     if (this.newCategory.nestedLevel === '1') {
-      categories = this.budgetService.getCategoriesByNestingLevel(0, '');
+      categories = this.categoryService.getCategoriesByNestingLevel(0, '');
     }
     if (this.newCategory.nestedLevel === '2') {
-      categories = this.budgetService.getCategoriesByNestingLevel(1, '');
+      categories = this.categoryService.getCategoriesByNestingLevel(1, '');
     }
     if (categories) {
       categories.subscribe({

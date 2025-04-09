@@ -1,0 +1,28 @@
+<div class="add-category-container">
+  <h2>Add New Budget</h2>
+
+  <div class="form-container">
+
+    <form [formGroup]="form">
+      <div class="form-row">
+
+        <input type="text" hidden formControlName="id"/>
+
+        <div class="form-group">
+          <label for="budget-name">Name</label>
+          <input type="text" id="budget-name" formControlName="name"/>
+        </div>
+
+        <div class="form-group">
+          <label for="budget-year">Year</label>
+          <input type="text" id="budget-year" formControlName="year"/>
+        </div>
+
+      </div>
+    </form>
+  </div>
+  <div class="buttons-row">
+    <button type="button" class="cancel-btn" (click)="cancel()">Cancel</button>
+    <button type="button" class="save-btn" (click)="save()">Save</button>
+  </div>
+</div>

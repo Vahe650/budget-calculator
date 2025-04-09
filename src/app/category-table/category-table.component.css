@@ -1,171 +1,149 @@
 table {
-    width: 100%;
-    margin-top: 20px;
-    overflow: auto;
-    border-collapse: collapse;
+  width: 100%;
+  margin-top: 20px;
+  overflow: auto;
+  border-collapse: collapse;
 }
 
 /* Table cell styling */
 th, td {
-    padding: 8px;
-    border: 1px solid #ddd;
+  padding: 8px;
+  border: 1px solid #ddd;
 }
 
 th {
-    text-align: center;
+  text-align: center;
 }
 
 td {
-    text-align: unset;
+  text-align: unset;
 }
 
 ::ng-deep .mdc-data-table__cell, .mdc-data-table__header-cell {
-    padding: 0 !important;
+  padding: 0 !important;
 }
 
 
 /* Header styling */
 th {
-    background-color: yellow !important;
-    font-weight: bold;
+  background-color: yellow !important;
+  font-weight: bold;
 }
 
 th.mat-header-cell {
-    background-color: #ffeb3b;
+  background-color: #ffeb3b;
 }
 
 .mat-header-row {
-    background-color: #ffeb3b;
-}
-
-
-.ebit-row td {
-    background-color: #5bff84 !important;
+  background-color: #ffeb3b;
 }
 
 .mat-row:last-child {
-    background-color: #d4edda;
-    font-weight: bold;
+  background-color: #d4edda;
+  font-weight: bold;
 }
 
 .mat-cell:last-child {
-    background-color: #d4edda;
+  background-color: #d4edda;
 }
 
 .delete-button {
-    background-color: #f44336;
-    color: #fff;
-    border-radius: 4px;
-    padding: 4px 8px;
+  background-color: #f44336;
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 8px;
 }
 
 .example-toggle-button-expanded {
-    transform: rotate(180deg);
-    transition: transform 0.3s;
+  transform: rotate(180deg);
+  transition: transform 0.3s;
 }
 
 tbody td {
-    text-align: unset !important;
+  text-align: unset !important;
 }
 
 .tr-background {
-    background-color: gray;
+  background-color: gray;
 }
 
 ::ng-deep .mat-icon {
-    padding: 0 !important;
-    cursor: pointer;
+  padding: 0 !important;
+  cursor: pointer;
 }
 
 ::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline {
-    border-radius: 5px;
+  border-radius: 5px;
 }
 
 ::ng-deep .mat-mdc-form-field-has-icon-suffix .mat-mdc-text-field-wrapper {
-    padding: unset !Important;
+  padding: unset !Important;
 }
 
 
 input {
-    border:0;
-    outline:0;
-    height: 60px;
-    width: 68px;
+  border: 0;
+  outline: 0;
+  height: 60px;
+  width: 68px;
 }
-input:focus {outline:none!important;}
+
+input:focus {
+  outline: none !important;
+}
 
 
 .parent-row {
-    background-color: darkgray;
+  background-color: darkgray;
 }
 
 .sub-row {
   background-color: #ece1e1;
 }
 
-.input-style-parent {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 60px;
-    padding: 0;
-    margin: 0;
-    background-color: darkgray;
+
+.ebit-row {
+  background-color: greenyellow;
 }
 
-.input-style-sub {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 60px;
-  padding: 0;
-  margin: 0;
-  background-color: #ece1e1;
-}
 
-.input-style-pos {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 60px;
-  padding: 0;
-  margin: 0;
+.input-style input {
+  height: 13px;
   background-color: darkgray;
 }
 
-.input-style input {
-    height: 13px;
-    background-color: darkgray;
-}
-
 .input-field {
-    width: 100%;
-    height: 30px;
-    box-sizing: border-box;
+  width: 100%;
+  height: 30px;
+  box-sizing: border-box;
 }
 
 .input-style input {
-    width: 80px;
+  width: 80px;
 }
 
 .button {
-    color: white !important;
-    margin-left: 1%;
+  color: white !important;
+  margin-left: 1%;
 }
 
 .button {
-    color: white !important;
-    margin-left: 1%;
+  color: white !important;
+  margin-left: 1%;
 }
 
 .edit-button {
-    background-color: green !important;
+  background-color: green !important;
 }
 
 .save-button {
-    background-color: orange !important;
+  background-color: orange !important;
 }
 
 .budget-button {
-    background-color: red !important;
+  background-color: red !important;
+}
+
+.hidden-row {
+  display: none;
 }
