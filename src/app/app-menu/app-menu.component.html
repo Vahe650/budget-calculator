@@ -1,11 +1,11 @@
 <div class="p-3">
   <button mat-raised-button
           *ngIf="!isActive('/') && !isActive('/add-category')&& !isActive('/add-budget')"
-          class="button menu-btn-active" (click)="goToAddCategory()">+ Add Category
+          class="button menu-btn-active me-2" (click)="goToAddCategory()">+ Add Category
   </button>
   <button mat-raised-button
           *ngIf="isActive('/')"
-          class="button menu-btn-active" (click)="goToAddBudgets()">+ Add Budget
+          class="button menu-btn-active me-2" (click)="goToAddBudgets()">+ Add Budget
   </button>
   <button mat-raised-button [class]="!isActive('/')? 'button menu-btn-active':'button menu-btn-inactive'"
           (click)="goToBudgets()">Budgets

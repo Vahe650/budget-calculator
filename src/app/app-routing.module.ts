@@ -6,7 +6,7 @@ import {BudgetTableComponent} from "./budget-table/budget-table.component";
 import {AddBudgetComponent} from "./add-budget/add-budget.component";
 
 export const routes: Routes = [
-  {path: 'budgets/:id/categories', component: CategoryTableComponent},
+  {path: 'budgets/:id/categories/:name', component: CategoryTableComponent},
   {path: 'add-category/:id', component: AddCategoryComponent},
   {path: 'add-budget/:id', component: AddBudgetComponent},
   {path: 'add-budget', component: AddBudgetComponent},

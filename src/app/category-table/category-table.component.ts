@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatIconModule} from '@angular/material/icon';
@@ -6,9 +6,10 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatInputModule} from '@angular/material/input';
 
 import {CategoryService} from '../service/category.service';
-import {Categ, FinancialCell, Price} from "../model/Price";
+import {Categ, Cell, FinancialCell, Price} from "../model/Price";
 import {ActivatedRoute} from "@angular/router";
 import {FormGroup} from "@angular/forms";
+import {CategoryDescription} from "../model/CategoryDescription";
 
 
 // Calendar month order for sorting
@@ -52,12 +53,17 @@ export class CategoryTableComponent implements OnInit {
     'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
   ];
 
+  // Tracks whether the input is focused
+  isInputFocused = false;
+
   /** The top-level categories to display. */
   categories: Categ[] = [];
+  categoryResponse: Categ[] = [];
 
   categoryWithMetrics: {} = {}
 
   budgetId: number = 0;
+  budgetName: string = '';
 
   public dataSource: MatTableDataSource<Categ>;
 
@@ -81,34 +87,14 @@ export class CategoryTableComponent implements OnInit {
 
   getAllCAtegories() {
     this.activatedRoute.params.subscribe(params => {
-      console.log('Budget ID from route:', params['id']);
       if (params['id']) {
         this.budgetId = params['id'];
+        this.budgetName = params['name'];
         this.budgetService.getAllCategories(this.budgetId).subscribe({
           next: (response) => {
-            console.log('response from server:', response);
+            this.categoryResponse = response as Categ[];
             const categoryDtos = response as Categ[];
-            this.categoryWithMetrics = categoryDtos.filter(c => c.financialResults.length > 0)[0] as Categ
-            this.categoryWithMetrics
-            const categories = this.calculateCategoryAggregates(categoryDtos)
-            // sort category by id
-            categories.sort((a, b) => {
-              if (a.id && b.id) {
-                return a.id - b.id;
-              }
-              return 0;
-            });
-            // @ts-ignore
-            categories[0].financialResults.sort(function (a, b) {
-              if (a.financialMetricType && b.financialMetricType) {
-                return a.financialMetricType.length < b.financialMetricType.length;
-              }
-              return 0;
-            });
-            this.categories = categories
-            console.log('Category DTOs from server:', categories);
-
-            this.dataSource = new MatTableDataSource<Categ>(categories);
+            this.drawTable(categoryDtos);
           },
           error: (err) => {
             console.error('Error fetching categories:', err);
@@ -117,6 +103,22 @@ export class CategoryTableComponent implements OnInit {
       }
     })
 
+  }
+
+  drawTable(categoryDtos: Categ[]) {
+    this.categoryWithMetrics = categoryDtos.filter(c => c.financialResults.length > 0)[0] as Categ
+    const categories = this.calculateCategoryAggregates(categoryDtos)
+
+    // @ts-ignore
+    categories[0].financialResults.sort(function (a, b) {
+      if (a.financialMetricType && b.financialMetricType) {
+        return a.financialMetricType.length < b.financialMetricType.length;
+      }
+      return 0;
+    });
+    this.categories = categories
+
+    this.dataSource = new MatTableDataSource<Categ>(categories);
   }
 
   calculateCategoryAggregates(
@@ -162,7 +164,7 @@ export class CategoryTableComponent implements OnInit {
         category.cells = sortedCells;
         category.totalAmount = {
           priceInMoney: category.cells.reduce(
-            (sum, cell) => sum + cell.price.priceInMoney,
+            (sum, cell) => sum + cell.price.pricePerUnit,
             0
           ),
           unitCount: category.cells.reduce(
@@ -174,7 +176,7 @@ export class CategoryTableComponent implements OnInit {
         category.cells.sort((a, b) => monthOrder[a.month] - monthOrder[b.month]);
         category.totalAmount = {
           priceInMoney: category.cells.reduce(
-            (sum, cell) => sum + cell.price.priceInMoney,
+            (sum, cell) => sum + cell.price.pricePerUnit,
             0
           ),
           unitCount: category.cells.reduce(
@@ -189,40 +191,113 @@ export class CategoryTableComponent implements OnInit {
     if (addEbit) {
       const level0Categories = flatList.filter(c => c.nestingLevel === 0);
       if (level0Categories.length >= 1) {
-        const first = level0Categories.filter(c => c.name === 'doxod')[0];
-        const second = level0Categories.filter(c => c.name === 'rasxod')[0];
+        // Retrieve specific categories based on category description
+        const income = level0Categories.find(c => c.categoryDescription === CategoryDescription.INCOME);
+        const expenses = level0Categories.find(c => c.categoryDescription === CategoryDescription.EXPENSES);
+        const amortizations = level0Categories.find(c => c.categoryDescription === CategoryDescription.AMORTIZATIONS);
+        const depreciation = level0Categories.find(c => c.categoryDescription === CategoryDescription.DEPRECIATION);
+        const tax = level0Categories.find(c => c.categoryDescription === CategoryDescription.TAX);
+        const interest = level0Categories.find(c => c.categoryDescription === CategoryDescription.INTEREST);
 
-        console.log(first);
-
-        // Retrieve financial results from the first category
-        const financialResults = level0Categories.filter(c => c.financialResults.length > 0)[0].financialResults;
+        const financialResults = level0Categories.find(c => c.financialResults && c.financialResults.length > 0)?.financialResults;
 
         if (financialResults && financialResults.length) {
           financialResults.forEach(financialResult => {
             const metricType = financialResult.financialMetricType;
-            const diffCells = first.cells.map((cell, idx) => {
-              const corresponding = second?.cells.find(c => c.month === cell.month);
-              const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
+            let diffCells: Cell [] = [];
+            let totalAmount = 0;
+            let unitCount = 0;
 
-              const secondPrice = corresponding?.price || fallback.price;
+            switch (metricType) {
+              case 'EBITDA':
+                // EBITDA = Income - Expenses
+                if (income && expenses) {
+                  diffCells = income.cells.map((cell, idx) => {
+                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month);
+                    const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
 
-              return {
-                id: cell.id,
-                month: cell.month,
-                price: {
-                  priceInMoney: cell.price.priceInMoney - secondPrice.priceInMoney,
-                  pricePerUnit: cell.price.pricePerUnit - secondPrice.pricePerUnit,
-                  unitCount: cell.price.unitCount - secondPrice.unitCount,
+                    const expensePrice = correspondingExpense?.price || fallback.price;
+
+                    return {
+                      id: cell.id,
+                      month: cell.month,
+                      price: {
+                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney,
+                        pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit,
+                        unitCount: cell.price.unitCount - expensePrice.unitCount,
+                      }
+                    };
+                  });
+
+                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.pricePerUnit, 0);
+                  unitCount = diffCells.reduce((sum, c) => sum + c.price.unitCount, 0);
                 }
-              };
-            });
+                break;
 
-            const totalAmount = diffCells.reduce(
-              (sum, c) => sum + c.price.priceInMoney, 0
-            );
-            const unitCount = diffCells.reduce(
-              (sum, c) => sum + c.price.unitCount, 0
-            );
+              case 'EBIT':
+                // EBIT = Income - Expenses - Amortizations - Depreciation
+                if (income && expenses && amortizations && depreciation) {
+                  diffCells = income.cells.map((cell, idx) => {
+                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month);
+                    const correspondingAmortization = amortizations.cells.find(c => c.month === cell.month);
+                    const correspondingDepreciation = depreciation.cells.find(c => c.month === cell.month);
+
+                    const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
+
+                    const expensePrice = correspondingExpense?.price || fallback.price;
+                    const amortizationPrice = correspondingAmortization?.price || fallback.price;
+                    const depreciationPrice = correspondingDepreciation?.price || fallback.price;
+
+                    return {
+                      id: cell.id,
+                      month: cell.month,
+                      price: {
+                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney - amortizationPrice.priceInMoney - depreciationPrice.priceInMoney,
+                        pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit - amortizationPrice.pricePerUnit - depreciationPrice.pricePerUnit,
+                        unitCount: cell.price.unitCount - expensePrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount,
+                      }
+                    };
+                  });
+
+                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.pricePerUnit, 0);
+                  unitCount = diffCells.reduce((sum, c) => sum + c.price.unitCount, 0);
+                }
+                break;
+
+              case 'NETTO_PELNA':
+                // Net Profit = Income - Expenses - Tax - Amortizations - Depreciation - Interest
+                if (income && expenses && tax && amortizations && depreciation && interest) {
+                  diffCells = income.cells.map((cell, idx) => {
+                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month);
+                    const correspondingTax = tax.cells.find(c => c.month === cell.month);
+                    const correspondingAmortization = amortizations.cells.find(c => c.month === cell.month);
+                    const correspondingDepreciation = depreciation.cells.find(c => c.month === cell.month);
+                    const correspondingInterest = interest.cells.find(c => c.month === cell.month);
+
+                    const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
+
+                    const expensePrice = correspondingExpense?.price || fallback.price;
+                    const taxPrice = correspondingTax?.price || fallback.price;
+                    const amortizationPrice = correspondingAmortization?.price || fallback.price;
+                    const depreciationPrice = correspondingDepreciation?.price || fallback.price;
+                    const interestPrice = correspondingInterest?.price || fallback.price;
+
+                    return {
+                      id: cell.id,
+                      month: cell.month,
+                      price: {
+                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney - taxPrice.priceInMoney - amortizationPrice.priceInMoney - depreciationPrice.priceInMoney - interestPrice.priceInMoney,
+                        pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit - taxPrice.pricePerUnit - amortizationPrice.pricePerUnit - depreciationPrice.pricePerUnit - interestPrice.pricePerUnit,
+                        unitCount: cell.price.unitCount - expensePrice.unitCount - taxPrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount - interestPrice.unitCount,
+                      }
+                    };
+                  });
+
+                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.pricePerUnit, 0);
+                  unitCount = diffCells.reduce((sum, c) => sum + c.price.unitCount, 0);
+                }
+                break;
+            }
 
             const diffCategory: Categ = {
               id: Math.max(...flatList.map(c => c.id ?? 0)) + 1,
@@ -239,6 +314,7 @@ export class CategoryTableComponent implements OnInit {
               expandable: false,
               expanded: false,
               hidden: false,
+              categoryDescription: null,
             };
 
             flatList.push(diffCategory);
@@ -262,16 +338,14 @@ export class CategoryTableComponent implements OnInit {
 
       if (child.nestingLevel <= parentLevel) break;
 
-      // Hide or show based on parent’s expanded state
       child.hidden = !category.expanded;
 
-      // Also collapse any sub-child rows
       if (!category.expanded) {
         child.expanded = false;
       }
     }
-
   }
+
 
   deleteCategory(node: Categ) {
     if (node.nestingLevel === 2) return;
@@ -287,8 +361,6 @@ export class CategoryTableComponent implements OnInit {
 
   saveAll(): void {
     let firstCateg = this.categoryWithMetrics as Categ
-    console.log('firstCateg');
-    console.log(firstCateg);
     let financialResults = firstCateg.financialResults;
     firstCateg.financialResults.forEach((result, index) => {
       this.categories.filter(c => c.name === result.financialMetricType).forEach(categ => {
@@ -310,7 +382,6 @@ export class CategoryTableComponent implements OnInit {
 
     firstCateg.cells = []
     firstCateg.childCategories = []
-    console.log(firstCateg);
     let categs = this.categories.filter(c => c.nestingLevel === 2);
     categs.push(firstCateg);
     this.budgetService.updateCells(categs).subscribe({
@@ -342,15 +413,52 @@ export class CategoryTableComponent implements OnInit {
 
   }
 
-  onPricePerUnitChange(elIndex: number, monthIndex: number, event: Event): void {
-    this.categories[elIndex].cells[monthIndex].price.priceInMoney = Number((event.target as HTMLInputElement).value);
-    this.categories[elIndex].cells[monthIndex].price.pricePerUnit = 0
-    this.categories[elIndex].cells[monthIndex].price.unitCount = 0
+  onPricePerUnitChange(unitType: string, elIndex: number, monthIndex: number, event: Event, id: number, cellId: number): void {
+
+    let value = Number((event.target as HTMLInputElement).value);
+    if (unitType === 'pricePerUnit') {
+      this.categories[elIndex].cells[monthIndex].price.pricePerUnit = value;
+    } else {
+      this.categories[elIndex].cells[monthIndex].price.unitCount = value
+    }
+    this.updateCategoryResponse(id, cellId, value, unitType);
+
+    this.categories[elIndex].cells[monthIndex].price.priceInMoney =
+      this.categories[elIndex].cells[monthIndex].price.unitCount * this.categories[elIndex].cells[monthIndex].price.pricePerUnit;
+  }
+
+  updateCategoryResponse(id: number, cellId: number, value: number, unitType: string) {
+    this.categoryResponse.forEach(c => {
+      c.childCategories.forEach(cc => {
+        cc.childCategories.forEach(c => {
+          if (c.id === id) {
+            c.cells.forEach(cell => {
+              if (cell.id === cellId) {
+                if (unitType === 'pricePerUnit') {
+                  cell.price.priceInMoney = value;
+                } else {
+                  cell.price.pricePerUnit = value;
+                }
+              }
+            })
+          }
+        })
+      })
+    })
   }
 
   onTaxChange(elIndex: number, event: Event) {
-    console.log(this.categories[elIndex].taxRate);
     this.categories[elIndex].taxRate = Number((event.target as HTMLInputElement).value);
-    console.log(this.categories[elIndex].taxRate);
   }
+
+  onFocus(elIndex: number, monthIndex: number) {
+    this.isInputFocused = true;
+  }
+
+  onBlur(elIndex: number, monthIndex: number) {
+    this.isInputFocused = false;
+    this.drawTable(this.categoryResponse);
+
+  }
+
 }

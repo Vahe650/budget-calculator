@@ -138,6 +138,7 @@ input:focus {
 
 .save-button {
   background-color: orange !important;
+  left: 87%;
 }
 
 .budget-button {
@@ -146,4 +147,14 @@ input:focus {
 
 .hidden-row {
   display: none;
+}
+
+.category-table {
+  max-width: 99%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f4f4f4;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

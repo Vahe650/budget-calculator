@@ -33,92 +33,127 @@
       </select>
     </div>
 
-  </div>
+    <div class="form-group" *ngIf="newCategory.nestedLevel === '0'">
+      <label for="parent-id">Description:</label>
+      <select id="parent-id" [(ngModel)]="newCategory.categoryDescription">
+        <option [ngValue]="null">-- Description --</option>
+        <option *ngFor="let c of categoryDescriptions" [ngValue]="c">
+          {{ c }}
+        </option>
+      </select>
+    </div>
 
-  <div class="form-group" *ngIf="newCategory.nestedLevel === '2'">
-    <label>Vienības:</label>
-    <div>
-      <input type="checkbox" id="unit-money" [(ngModel)]="newCategory.unitMoney"
-             (change)="mapUnitToValueType()"/>
-      <label for="unit-money" class="type-label">Naudas izteiksmē</label>
-    </div>
-    <div>
-      <input type="checkbox" id="unit-tons" [(ngModel)]="newCategory.unitTons"
-             (change)="mapUnitToValueType()"/>
-      <label for="unit-tons" class="type-label">Tonns</label>
-    </div>
-    <div>
-      <input type="checkbox" id="unit-pieces" [(ngModel)]="newCategory.unitPieces"
-             (change)="mapUnitToValueType()"/>
-      <label for="unit-pieces" class="type-label">Gabali</label>
-    </div>
-    <div>
-      <input type="checkbox" id="unit-liters" [(ngModel)]="newCategory.unitLiters"
-             (change)="mapUnitToValueType()"/>
-      <label for="unit-liters" class="type-label">Litri</label>
-    </div>
   </div>
+  <ng-container *ngIf="newCategory.nestedLevel ===  '2'">
 
-  <div class="form-group" *ngIf="newCategory.nestedLevel === '2'">
-    <label for="category-tax">Tax:</label>
-    <input type="number" id="category-tax" [(ngModel)]="newCategory.taxRate"/>
-  </div>
 
-  <div class="form-container" *ngIf="newCategory.nestedLevel === '2'">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Janvāris:</label>
-        <input type="number" [(ngModel)]="newCategory.jan"/>
+    <div class="form-group">
+      <label>Vienības:</label>
+      <div>
+        <input type="checkbox" id="unit-money" [(ngModel)]="newCategory.unitMoney"
+               (change)="mapUnitToValueType()"/>
+        <label for="unit-money" class="type-label">Naudas izteiksmē</label>
       </div>
-      <div class="form-group">
-        <label>Februāris:</label>
-        <input type="number" [(ngModel)]="newCategory.feb"/>
+      <div>
+        <input type="checkbox" id="unit-tons" [(ngModel)]="newCategory.unitTons"
+               [disabled]="disableUnitType(newCategory.unitPieces,newCategory.unitLiters)"
+               (change)="mapUnitToValueType()"/>
+        <label for="unit-tons" class="type-label">Tonns</label>
       </div>
-      <div class="form-group">
-        <label>Marts:</label>
-        <input type="number" [(ngModel)]="newCategory.mar"/>
+      <div>
+        <input type="checkbox" id="unit-pieces" [(ngModel)]="newCategory.unitPieces"
+               [disabled]="disableUnitType(newCategory.unitTons,newCategory.unitLiters)"
+
+               (change)="mapUnitToValueType()"/>
+        <label for="unit-pieces" class="type-label">Gabali</label>
       </div>
-      <div class="form-group">
-        <label>Aprīlis:</label>
-        <input type="number" [(ngModel)]="newCategory.apr"/>
-      </div>
-      <div class="form-group">
-        <label>Maijs:</label>
-        <input type="number" [(ngModel)]="newCategory.may"/>
-      </div>
-      <div class="form-group">
-        <label>Jūnijs:</label>
-        <input type="number" [(ngModel)]="newCategory.jun"/>
+      <div>
+        <input type="checkbox" id="unit-liters" [(ngModel)]="newCategory.unitLiters"
+               [disabled]="disableUnitType(newCategory.unitTons,newCategory.unitPieces)"
+
+               (change)="mapUnitToValueType()"/>
+        <label for="unit-liters" class="type-label">Litri</label>
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Jūlijs:</label>
-        <input type="number" [(ngModel)]="newCategory.jul"/>
+    <div class="form-group col-4">
+      <label for="category-tax">Tax:</label>
+      <input type="number" id="category-tax" [(ngModel)]="newCategory.taxRate"/>
+    </div>
+
+    <div class="form-group row">
+      <div class="col-4">
+        <label for="category-pricePer-unit">Price per Unit:</label>
+        <input type="number" id="category-pricePer-unit" (input)="addValueForAllMonths($event)"/>
       </div>
-      <div class="form-group">
-        <label>Augusts:</label>
-        <input type="number" [(ngModel)]="newCategory.aug"/>
-      </div>
-      <div class="form-group">
-        <label>Septembris:</label>
-        <input type="number" [(ngModel)]="newCategory.sep"/>
-      </div>
-      <div class="form-group">
-        <label>Oktobris:</label>
-        <input type="number" [(ngModel)]="newCategory.oct"/>
-      </div>
-      <div class="form-group">
-        <label>Novembris:</label>
-        <input type="number" [(ngModel)]="newCategory.nov"/>
-      </div>
-      <div class="form-group">
-        <label>Decembris:</label>
-        <input type="number" [(ngModel)]="newCategory.dec"/>
+      <div class="col-4">
+        <input [(ngModel)]="newCategory.toAllMonths" type="checkbox" id="apply-value" style="margin-top: 20%;"/>
+        <label for="apply-value" class="type-label">Apply value to all months</label>
       </div>
     </div>
-  </div>
+
+    <div class="form-group col-12">
+
+    </div>
+
+
+    <div class="form-container" *ngIf="!newCategory.toAllMonths">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Janvāris:</label>
+          <input type="number" [(ngModel)]="newCategory.jan"/>
+        </div>
+        <div class="form-group">
+          <label>Februāris:</label>
+          <input type="number" [(ngModel)]="newCategory.feb"/>
+        </div>
+        <div class="form-group">
+          <label>Marts:</label>
+          <input type="number" [(ngModel)]="newCategory.mar"/>
+        </div>
+        <div class="form-group">
+          <label>Aprīlis:</label>
+          <input type="number" [(ngModel)]="newCategory.apr"/>
+        </div>
+        <div class="form-group">
+          <label>Maijs:</label>
+          <input type="number" [(ngModel)]="newCategory.may"/>
+        </div>
+        <div class="form-group">
+          <label>Jūnijs:</label>
+          <input type="number" [(ngModel)]="newCategory.jun"/>
+        </div>
+      </div>
+
+      <div class="form-row"  *ngIf="!newCategory.toAllMonths">
+        <div class="form-group">
+          <label>Jūlijs:</label>
+          <input type="number" [(ngModel)]="newCategory.jul"/>
+        </div>
+        <div class="form-group">
+          <label>Augusts:</label>
+          <input type="number" [(ngModel)]="newCategory.aug"/>
+        </div>
+        <div class="form-group">
+          <label>Septembris:</label>
+          <input type="number" [(ngModel)]="newCategory.sep"/>
+        </div>
+        <div class="form-group">
+          <label>Oktobris:</label>
+          <input type="number" [(ngModel)]="newCategory.oct"/>
+        </div>
+        <div class="form-group">
+          <label>Novembris:</label>
+          <input type="number" [(ngModel)]="newCategory.nov"/>
+        </div>
+        <div class="form-group">
+          <label>Decembris:</label>
+          <input type="number" [(ngModel)]="newCategory.dec"/>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
 
   <div class="buttons-row">
     <button type="button" class="cancel-btn" (click)="cancel()">Cancel</button>

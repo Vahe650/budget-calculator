@@ -15,7 +15,7 @@
     </thead>
     <tbody>
     <tr *ngFor="let b of budgets; let i = index">
-      <td (click)="goToCategories(b.id)" class="link-id"
+      <td (click)="goToCategories(b.id, b.name)" class="link-id"
 
       >{{ i + 1 }}</td>
       <td>{{ b.name }}</td>

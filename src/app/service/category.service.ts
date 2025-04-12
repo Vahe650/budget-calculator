@@ -47,7 +47,7 @@ export class CategoryService {
   }
 
   updateCells(requestBody: Categ[]): Observable<any> {
-    return this.http.put<any>(this.patchCellsApiUrl, requestBody);
+    return this.http.patch<any>(this.patchCellsApiUrl, requestBody);
   }
 
 
@@ -74,13 +74,5 @@ export class CategoryService {
    */
   deleteCategory(categoryId: number): Observable<any> {
     return this.http.delete<any>(`${this.categoryApiUrl}/${categoryId}`);
-  }
-
-  getPendingCategory() {
-    return this.pendingCategory;
-  }
-
-  clearPendingCategory() {
-    this.pendingCategory = null;
   }
 }

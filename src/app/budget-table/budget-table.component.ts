@@ -58,8 +58,8 @@ export class BudgetTableComponent implements OnInit {
     });
   }
 
-  goToCategories(id: number) {
-    this.router.navigate(['budgets/' + id + '/categories']);
+  goToCategories(id: number, name: string) {
+    this.router.navigate(['budgets/' + id + '/categories/'+name]);
   }
 
   /** Called when user clicks Edit. Adjust logic or navigate to edit route. */

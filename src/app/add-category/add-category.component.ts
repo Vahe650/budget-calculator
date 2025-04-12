@@ -20,6 +20,15 @@ export class AddCategoryComponent implements OnInit {
   /** Arrays to store all budgets and categories fetched from the backend */
   budgets: any[] = [];
   categories: any[] = [];
+  categoryDescriptions: CategoryDescription[] = [
+    CategoryDescription.DEPRECIATION,
+    CategoryDescription.TAX,
+    CategoryDescription.INCOME,
+    CategoryDescription.AMORTIZATIONS,
+    CategoryDescription.EXPENSES,
+    CategoryDescription.INTEREST,
+
+  ];
 
   newCategory: {
     name: string;
@@ -46,14 +55,12 @@ export class AddCategoryComponent implements OnInit {
     priceChange: boolean;
     expandable: boolean;
     expanded: boolean;
-    /**
-     * Budget and parent IDs
-     * We will map them from dropdowns to the actual ID, but show names
-     */
+    categoryDescription: CategoryDescription | null;
     budgetId: number | null;
     parentId: number | null;
     /** The “value types” for the category, e.g. MONEY, WEIGHT, etc. */
     valueType: string[];
+    toAllMonths: boolean;
   } = {
     name: '',
     nestedLevel: '0',
@@ -70,9 +77,11 @@ export class AddCategoryComponent implements OnInit {
     priceChange: false,
     expandable: false,
     expanded: false,
+    categoryDescription: null,
     budgetId: null,
     parentId: null,
-    valueType: []
+    valueType: [],
+    toAllMonths: true,
   };
 
   constructor(
@@ -98,17 +107,13 @@ export class AddCategoryComponent implements OnInit {
       if (params['id']) {
         this.newCategory.budgetId = params['id'];
       }
-      console.log(this.newCategory.taxRate);
       const categoryData
         = {
         ...this.newCategory,
         unitPrice: this.generateUnitPrices(),
         isAutocomplete: false,
         taxRate: this.newCategory.taxRate === 0 ? null : this.newCategory.taxRate,
-        categoryDescription: CategoryDescription.TAX
       };
-
-      console.log(categoryData);
 
       this.categoryService.createCategory(categoryData).subscribe({
         next: (response) => {
@@ -170,7 +175,6 @@ export class AddCategoryComponent implements OnInit {
   }
 
   getCategories(event: any) {
-    console.log('getCategories() called', event);
     var categories = null;
     if (this.newCategory.nestedLevel === '1') {
       categories = this.categoryService.getCategoriesByNestingLevel(0, '');
@@ -181,7 +185,6 @@ export class AddCategoryComponent implements OnInit {
     if (categories) {
       categories.subscribe({
         next: (res) => {
-          console.log('Categories resp:', res);
           this.categories = res || [];
         },
         error: (err) => {
@@ -189,5 +192,25 @@ export class AddCategoryComponent implements OnInit {
         }
       });
     }
+  }
+
+  disableUnitType(unit1: boolean, unit2:boolean): boolean {
+    return unit1|| unit2
+  }
+
+  addValueForAllMonths(event: Event) {
+    const value = Number((event.target as HTMLInputElement).value);
+    this.newCategory.jan = value;
+    this.newCategory.feb = value;
+    this.newCategory.mar = value;
+    this.newCategory.apr = value;
+    this.newCategory.may = value;
+    this.newCategory.jun = value;
+    this.newCategory.jul = value;
+    this.newCategory.aug = value;
+    this.newCategory.sep = value;
+    this.newCategory.oct = value;
+    this.newCategory.nov = value;
+    this.newCategory.dec = value;
   }
 }
