@@ -12,22 +12,6 @@ import {FormGroup} from "@angular/forms";
 import {CategoryDescription} from "../model/CategoryDescription";
 
 
-// Calendar month order for sorting
-const monthOrder: Record<string, number> = {
-  JANUARY: 1,
-  FEBRUARY: 2,
-  MARCH: 3,
-  APRIL: 4,
-  MAY: 5,
-  JUNE: 6,
-  JULY: 7,
-  AUGUST: 8,
-  SEPTEMBER: 9,
-  OCTOBER: 10,
-  NOVEMBER: 11,
-  DECEMBER: 12,
-};
-
 @Component({
   selector: 'app-budget-table',
   standalone: true,
@@ -75,17 +59,13 @@ export class CategoryTableComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
   ) {
     this.dataSource = new MatTableDataSource<Categ>([]);
-
-    this.getAllCAtegories()
-
   }
 
   ngOnInit(): void {
-
-
+    this.getAllCategories()
   }
 
-  getAllCAtegories() {
+  getAllCategories() {
     this.activatedRoute.params.subscribe(params => {
       if (params['id']) {
         this.budgetId = params['id'];
@@ -385,13 +365,11 @@ export class CategoryTableComponent implements OnInit {
     let categs = this.categories.filter(c => c.nestingLevel === 2);
     categs.push(firstCateg);
     this.budgetService.updateCells(categs).subscribe({
-
         next: (res) => {
-          this.getAllCAtegories()
+          this.getAllCategories()
         },
         error: (err) => {
-          this.getAllCAtegories()
-
+          this.getAllCategories()
         }
       }
     )

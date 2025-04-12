@@ -5,11 +5,12 @@ import {BudgetService} from "../service/budget.service";
 import {Budget} from "../model/budget";
 import {MatInputModule} from "@angular/material/input";
 import {ActivatedRoute, Router} from "@angular/router";
+import {MatSnackBar, MatSnackBarModule} from "@angular/material/snack-bar";
 
 @Component({
   selector: 'app-add-budget',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatInputModule],
+  imports: [CommonModule, ReactiveFormsModule, MatInputModule, MatSnackBarModule],
   templateUrl: './add-budget.component.html',
   styleUrls: ['./add-budget.component.css']
 })
@@ -19,7 +20,8 @@ export class AddBudgetComponent implements OnInit {
   constructor(private fb: FormBuilder,
               private router: Router,
               private activatedRoute: ActivatedRoute,
-              private budgetService: BudgetService) {
+              private budgetService: BudgetService,
+              private _snackBar: MatSnackBar) {
   }
 
   budgetId = 0;
@@ -55,13 +57,30 @@ export class AddBudgetComponent implements OnInit {
       name: this.form.get('name')?.value as string,
     }
     if (this.budgetId > 0) {
-      this.budgetService.update(budgetData).subscribe(_ => {
-        this.router.navigate(['/']);
-      })
+      this.budgetService.update(budgetData).subscribe({
+          next: () => {
+            this.router.navigate(['/']);
+          },
+          error: (res) => {
+            this._snackBar.open(res.error.description, 'Close', {
+              duration: 2000,
+            });
+          }
+        }
+      )
     } else {
-      this.budgetService.save(budgetData).subscribe(_ => {
-        this.router.navigate(['/']);
-      });
+      this.budgetService.save(budgetData).subscribe(
+        {
+          next: () => {
+            this.router.navigate(['/']);
+          },
+          error: (res) => {
+            this._snackBar.open(res.error.description, 'Close', {
+              duration: 2000,
+            });
+          }
+        }
+      );
     }
 
   }
