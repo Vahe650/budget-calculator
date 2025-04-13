@@ -220,4 +220,20 @@ export class AddCategoryComponent implements OnInit {
     this.newCategory.taxRate = 0;
     this.newCategory.taxDisable = !this.newCategory.taxDisable
   }
+
+
+  isFormValid(): boolean {
+    if (this.newCategory.nestedLevel === '0') {
+      return this.newCategory.name !== '' && this.newCategory.categoryDescription !== null
+    }
+    if (this.newCategory.nestedLevel === '1') {
+      return this.newCategory.name !== '' && this.newCategory.parentId !== null
+    }
+    if (this.newCategory.nestedLevel === '2') {
+      return this.newCategory.name !== '' && this.newCategory.parentId !== null
+        && (this.newCategory.unitMoney && (this.newCategory.unitTons || this.newCategory.unitLiters || this.newCategory.unitPieces))
+      && this.newCategory.jan !== 0
+    }
+    return false;
+  }
 }

@@ -85,8 +85,8 @@
       </div>
       <div class="col-4">
         <input
-               (change)="disableTaxAndSetNUll()"
-               type="checkbox" id="apply-tax" style="margin-top: 20%;"/>
+          (change)="disableTaxAndSetNUll()"
+          type="checkbox" id="apply-tax" style="margin-top: 20%;"/>
         <label for="apply-tax" class="type-label">Alga</label>
       </div>
     </div>
@@ -131,7 +131,7 @@
         </div>
       </div>
 
-      <div class="form-row"  *ngIf="!newCategory.toAllMonths">
+      <div class="form-row" *ngIf="!newCategory.toAllMonths">
         <div class="form-group">
           <label>Jūlijs:</label>
           <input type="number" [(ngModel)]="newCategory.jul"/>
@@ -163,6 +163,8 @@
 
   <div class="buttons-row">
     <button type="button" class="cancel-btn" (click)="cancel()">Cancel</button>
-    <button type="button" class="save-btn" (click)="saveCategory()">Save</button>
+    <button [class]="isFormValid()?'save-btn':'save-btn-disabled'" [disabled]="!isFormValid()"
+            (click)="saveCategory()">Save
+    </button>
   </div>
 </div>
