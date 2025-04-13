@@ -1,4 +1,4 @@
-import {Component, HostListener, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatIconModule} from '@angular/material/icon';
@@ -10,6 +10,7 @@ import {Categ, Cell, FinancialCell, Price} from "../model/Price";
 import {ActivatedRoute} from "@angular/router";
 import {FormGroup} from "@angular/forms";
 import {CategoryDescription} from "../model/CategoryDescription";
+import {BudgetService} from "../service/budget.service";
 
 
 @Component({
@@ -55,7 +56,8 @@ export class CategoryTableComponent implements OnInit {
 
 
   constructor(
-    private budgetService: CategoryService,
+    private categoryService: CategoryService,
+    private budgetService: BudgetService,
     private activatedRoute: ActivatedRoute,
   ) {
     this.dataSource = new MatTableDataSource<Categ>([]);
@@ -69,17 +71,25 @@ export class CategoryTableComponent implements OnInit {
     this.activatedRoute.params.subscribe(params => {
       if (params['id']) {
         this.budgetId = params['id'];
-        this.budgetName = params['name'];
-        this.budgetService.getAllCategories(this.budgetId).subscribe({
-          next: (response) => {
-            this.categoryResponse = response as Categ[];
-            const categoryDtos = response as Categ[];
-            this.drawTable(categoryDtos);
-          },
-          error: (err) => {
-            console.error('Error fetching categories:', err);
-          },
-        });
+        this.budgetService.getById(this.budgetId).subscribe(budget=>{
+          this.categoryService.getAllCategories(this.budgetId).subscribe({
+            next: (response) => {
+              this.budgetName = budget.name;
+              this.categoryResponse = response as Categ[];
+              const categoryDtos = response as Categ[];
+              if (categoryDtos.length > 0) {
+                this.drawTable(categoryDtos);
+              } else {
+                this.dataSource = new MatTableDataSource<Categ>([]);
+
+              }
+            },
+            error: (err) => {
+              console.error('Error fetching categories:', err);
+            },
+          });
+
+        })
       }
     })
 
@@ -350,9 +360,9 @@ export class CategoryTableComponent implements OnInit {
 
   deleteCategory(node: Categ) {
     if (node.nestingLevel === 2) return;
-    this.budgetService.deleteCategory(node.id).subscribe({
+    this.categoryService.deleteCategory(node.id).subscribe({
       next: (response) => {
-        console.log('Category deleted successfully:', response);
+        this.getAllCategories()
       },
       error: (err) => {
         console.error('Failed to delete category:', err);
@@ -385,7 +395,7 @@ export class CategoryTableComponent implements OnInit {
     firstCateg.childCategories = []
     let categs = this.categories.filter(c => c.nestingLevel === 2);
     categs.push(firstCateg);
-    this.budgetService.updateCells(categs).subscribe({
+    this.categoryService.updateCells(categs).subscribe({
         next: (res) => {
           this.getAllCategories()
         },

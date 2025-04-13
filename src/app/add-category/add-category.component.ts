@@ -17,8 +17,6 @@ import {CategoryDescription} from "../model/CategoryDescription";
 })
 export class AddCategoryComponent implements OnInit {
 
-  /** Arrays to store all budgets and categories fetched from the backend */
-  budgets: any[] = [];
   categories: any[] = [];
   categoryDescriptions: CategoryDescription[] = [
     CategoryDescription.DEPRECIATION,
@@ -119,7 +117,7 @@ export class AddCategoryComponent implements OnInit {
 
       this.categoryService.createCategory(categoryData).subscribe({
         next: (response) => {
-          this.router.navigate(['/']);
+          this.router.navigate(['/budgets/' + this.newCategory.budgetId]);
         },
         error: (err) => {
           console.error('Error creating category:', err);
@@ -196,8 +194,8 @@ export class AddCategoryComponent implements OnInit {
     }
   }
 
-  disableUnitType(unit1: boolean, unit2:boolean): boolean {
-    return unit1|| unit2
+  disableUnitType(unit1: boolean, unit2: boolean): boolean {
+    return unit1 || unit2
   }
 
   addValueForAllMonths(event: Event) {
@@ -232,7 +230,7 @@ export class AddCategoryComponent implements OnInit {
     if (this.newCategory.nestedLevel === '2') {
       return this.newCategory.name !== '' && this.newCategory.parentId !== null
         && (this.newCategory.unitMoney && (this.newCategory.unitTons || this.newCategory.unitLiters || this.newCategory.unitPieces))
-      && this.newCategory.jan !== 0
+        && this.newCategory.jan !== 0
     }
     return false;
   }
