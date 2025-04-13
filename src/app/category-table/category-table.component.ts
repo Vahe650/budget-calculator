@@ -113,6 +113,10 @@ export class CategoryTableComponent implements OnInit {
       SEPTEMBER: 9, OCTOBER: 10, NOVEMBER: 11, DECEMBER: 12,
     };
 
+    const calculatePriceInMoney = (unitCount: number, pricePerUnit: number) => {
+      return (unitCount === 0 || unitCount == null) ? 1 : unitCount * pricePerUnit;
+    };
+
     categories.forEach(category => {
       flatList.push(category);
 
@@ -123,13 +127,17 @@ export class CategoryTableComponent implements OnInit {
 
         category.childCategories.forEach(child => {
           child.cells.forEach(cell => {
+            const unitCount = (cell.price.unitCount === 0 || cell.price.unitCount == null) ? 1 : cell.price.unitCount;
+            const pricePerUnit = cell.price.pricePerUnit || 0; // Default to 0 if pricePerUnit is falsy
+
             if (!priceMap.has(cell.month)) {
               priceMap.set(cell.month, {priceInMoney: 0, pricePerUnit: 0, unitCount: 0});
             }
+
             const current = priceMap.get(cell.month)!;
-            current.priceInMoney += cell.price.priceInMoney;
-            current.pricePerUnit += cell.price.pricePerUnit;
-            current.unitCount += cell.price.unitCount;
+            current.priceInMoney += calculatePriceInMoney(unitCount, pricePerUnit); // Correct price calculation
+            current.pricePerUnit += pricePerUnit;
+            current.unitCount += unitCount;
           });
         });
 
@@ -144,34 +152,33 @@ export class CategoryTableComponent implements OnInit {
         category.cells = sortedCells;
         category.totalAmount = {
           priceInMoney: category.cells.reduce(
-            (sum, cell) => sum + cell.price.pricePerUnit,
+            (sum, cell) => sum + (cell.price.priceInMoney || 0),
             0
           ),
           unitCount: category.cells.reduce(
-            (sum, cell) => sum + cell.price.unitCount,
+            (sum, cell) => sum + (cell.price.unitCount || 1),  // Ensure unitCount is not 0
             0
           ),
         };
       } else {
         category.cells.sort((a, b) => monthOrder[a.month] - monthOrder[b.month]);
+
         category.totalAmount = {
           priceInMoney: category.cells.reduce(
-            (sum, cell) => sum + cell.price.pricePerUnit,
+            (sum, cell) => sum + (calculatePriceInMoney((cell.price.unitCount === 0 || cell.price.unitCount == null) ? 1 : cell.price.unitCount, cell.price.pricePerUnit)),
             0
           ),
           unitCount: category.cells.reduce(
-            (sum, cell) => sum + cell.price.unitCount,
+            (sum, cell) => sum + (cell.price.unitCount || 1),  // Ensure unitCount is not 0
             0
           ),
         };
       }
     });
 
-    // Add financial results categories for each financial metric (EBIT, EBITDA, NETTO_PELNA)
     if (addEbit) {
       const level0Categories = flatList.filter(c => c.nestingLevel === 0);
       if (level0Categories.length >= 1) {
-        // Retrieve specific categories based on category description
         const income = level0Categories.find(c => c.categoryDescription === CategoryDescription.INCOME);
         const expenses = level0Categories.find(c => c.categoryDescription === CategoryDescription.EXPENSES);
         const amortizations = level0Categories.find(c => c.categoryDescription === CategoryDescription.AMORTIZATIONS);
@@ -184,7 +191,7 @@ export class CategoryTableComponent implements OnInit {
         if (financialResults && financialResults.length) {
           financialResults.forEach(financialResult => {
             const metricType = financialResult.financialMetricType;
-            let diffCells: Cell [] = [];
+            let diffCells: Cell[] = [];
             let totalAmount = 0;
             let unitCount = 0;
 
@@ -197,19 +204,20 @@ export class CategoryTableComponent implements OnInit {
                     const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
 
                     const expensePrice = correspondingExpense?.price || fallback.price;
+                    const cellUnitCount = cell.price.unitCount === 0 ? 1 : cell.price.unitCount;
 
                     return {
                       id: cell.id,
                       month: cell.month,
                       price: {
-                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney,
+                        priceInMoney: calculatePriceInMoney(cellUnitCount, cell.price.pricePerUnit) - calculatePriceInMoney(expensePrice.unitCount, expensePrice.pricePerUnit),
                         pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit,
-                        unitCount: cell.price.unitCount - expensePrice.unitCount,
+                        unitCount: cellUnitCount - expensePrice.unitCount,
                       }
                     };
                   });
 
-                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.pricePerUnit, 0);
+                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.priceInMoney, 0);
                   unitCount = diffCells.reduce((sum, c) => sum + c.price.unitCount, 0);
                 }
                 break;
@@ -228,18 +236,23 @@ export class CategoryTableComponent implements OnInit {
                     const amortizationPrice = correspondingAmortization?.price || fallback.price;
                     const depreciationPrice = correspondingDepreciation?.price || fallback.price;
 
+                    const cellUnitCount = cell.price.unitCount === 0 ? 1 : cell.price.unitCount;
+
                     return {
                       id: cell.id,
                       month: cell.month,
                       price: {
-                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney - amortizationPrice.priceInMoney - depreciationPrice.priceInMoney,
+                        priceInMoney: calculatePriceInMoney(cellUnitCount, cell.price.pricePerUnit) -
+                          calculatePriceInMoney(expensePrice.unitCount, expensePrice.pricePerUnit) -
+                          calculatePriceInMoney(amortizationPrice.unitCount, amortizationPrice.pricePerUnit) -
+                          calculatePriceInMoney(depreciationPrice.unitCount, depreciationPrice.pricePerUnit),
                         pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit - amortizationPrice.pricePerUnit - depreciationPrice.pricePerUnit,
-                        unitCount: cell.price.unitCount - expensePrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount,
+                        unitCount: cellUnitCount - expensePrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount,
                       }
                     };
                   });
 
-                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.pricePerUnit, 0);
+                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.priceInMoney, 0);
                   unitCount = diffCells.reduce((sum, c) => sum + c.price.unitCount, 0);
                 }
                 break;
@@ -262,18 +275,25 @@ export class CategoryTableComponent implements OnInit {
                     const depreciationPrice = correspondingDepreciation?.price || fallback.price;
                     const interestPrice = correspondingInterest?.price || fallback.price;
 
+                    const cellUnitCount = cell.price.unitCount === 0 ? 1 : cell.price.unitCount;
+
                     return {
                       id: cell.id,
                       month: cell.month,
                       price: {
-                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney - taxPrice.priceInMoney - amortizationPrice.priceInMoney - depreciationPrice.priceInMoney - interestPrice.priceInMoney,
+                        priceInMoney: calculatePriceInMoney(cellUnitCount, cell.price.pricePerUnit) -
+                          calculatePriceInMoney(expensePrice.unitCount, expensePrice.pricePerUnit) -
+                          calculatePriceInMoney(taxPrice.unitCount, taxPrice.pricePerUnit) -
+                          calculatePriceInMoney(amortizationPrice.unitCount, amortizationPrice.pricePerUnit) -
+                          calculatePriceInMoney(depreciationPrice.unitCount, depreciationPrice.pricePerUnit) -
+                          calculatePriceInMoney(interestPrice.unitCount, interestPrice.pricePerUnit),
                         pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit - taxPrice.pricePerUnit - amortizationPrice.pricePerUnit - depreciationPrice.pricePerUnit - interestPrice.pricePerUnit,
-                        unitCount: cell.price.unitCount - expensePrice.unitCount - taxPrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount - interestPrice.unitCount,
+                        unitCount: cellUnitCount - expensePrice.unitCount - taxPrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount - interestPrice.unitCount,
                       }
                     };
                   });
 
-                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.pricePerUnit, 0);
+                  totalAmount = diffCells.reduce((sum, c) => sum + c.price.priceInMoney, 0);
                   unitCount = diffCells.reduce((sum, c) => sum + c.price.unitCount, 0);
                 }
                 break;
@@ -295,6 +315,7 @@ export class CategoryTableComponent implements OnInit {
               expanded: false,
               hidden: false,
               categoryDescription: null,
+              hidePrice: true,
             };
 
             flatList.push(diffCategory);
@@ -413,9 +434,9 @@ export class CategoryTableComponent implements OnInit {
             c.cells.forEach(cell => {
               if (cell.id === cellId) {
                 if (unitType === 'pricePerUnit') {
-                  cell.price.priceInMoney = value;
-                } else {
                   cell.price.pricePerUnit = value;
+                } else {
+                  cell.price.unitCount = value;
                 }
               }
             })
@@ -439,4 +460,7 @@ export class CategoryTableComponent implements OnInit {
 
   }
 
+  onChange($event: Event, item: Categ) {
+    item.hidePrice = !item.hidePrice;
+  }
 }

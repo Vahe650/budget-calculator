@@ -6,29 +6,41 @@
   <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
     <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef >Category</th>
+      <th mat-header-cell *matHeaderCellDef>Category</th>
       <td mat-cell *matCellDef="let item; let i=index" [class]="getClass(item)">
         <strong class="m-lg-2" *ngIf="item.nestingLevel === 0">
-          {{ item.name + (item.categoryDescription ?  ":"+ item.categoryDescription : '') }}
+          {{ item.name + (item.categoryDescription ? ":" + item.categoryDescription : '') }}
         </strong>
         <span class="m-lg-2" *ngIf="item.nestingLevel !== 0">{{ item.name }}</span>
-        <button *ngIf="item.nestingLevel < 2 && i < categories.length-3"
-                mat-icon-button
-                (click)="toggleRow(item); $event.stopPropagation()">
-          <mat-icon
-            aria-hidden="false"
-            aria-label="Example home icon"
-            [fontIcon]="!item.expanded ? 'add': 'remove'">
-          </mat-icon>
-        </button>
+        <ng-container *ngIf="item.nestingLevel < 2 && i < categories.length-3">
+          <button
+            mat-icon-button
+            (click)="toggleRow(item); $event.stopPropagation()">
+            <mat-icon
+              aria-hidden="false"
+              aria-label="Example home icon"
+              [fontIcon]="!item.expanded ? 'add': 'remove'">
+            </mat-icon>
+          </button>
+        </ng-container>
+        <ng-container *ngIf="item.nestingLevel === 2">
+          <div title="Switch to unit count or price per unit" class="form-check form-switch" style="display: inline-flex">
+              <input class="form-check-input" type="checkbox" (change)="onChange($event, item)"
+                   role="switch" id="flexSwitchCheckDefault" />
+            <label class="form-check-label" for="flexSwitchCheckDefault">
+              {{item.hidePrice ? '    Unit Count' : 'Price per Unit'}}
+            </label>
+          </div>
+        </ng-container>
       </td>
     </ng-container>
 
     <ng-container matColumnDef="tax">
-      <th mat-header-cell *matHeaderCellDef >Tax</th>
+      <th mat-header-cell *matHeaderCellDef>Tax</th>
       <td mat-cell *matCellDef="let item; let elIndex=index" [class]="getClass(item)">
 
         <input *ngIf="item.nestingLevel === 2"
+               class="number-input"
                type="number"
                (input)="onTaxChange(elIndex, $event)"
                [value]="item.taxRate"/>
@@ -38,26 +50,30 @@
     </ng-container>
 
     <ng-container *ngFor="let month of months; let monthIndex = index" [matColumnDef]="month">
-      <th mat-header-cell *matHeaderCellDef >{{month}}</th>
+      <th mat-header-cell *matHeaderCellDef>{{month}}</th>
       <td mat-cell *matCellDef="let item; let elIndex=index" [class]="getClass(item)">
 
         <!-- If nestingLevel is 2, make input editable -->
         <input *ngIf="item.nestingLevel === 2"
+               class="number-input"
                (focus)="onFocus(elIndex, monthIndex)"
                (blur)="onBlur(elIndex, monthIndex)"
                [readOnly]="!isInputFocused"
-               (input)="onPricePerUnitChange('pricePerUnit',elIndex, monthIndex, $event, item.id, item.cells[monthIndex].id)"
-               [value]="item.cells[monthIndex]?.price.pricePerUnit" type="number"/>
+               (input)="onPricePerUnitChange(
+               (!item.hidePrice? 'pricePerUnit':'unitCount')
+               ,elIndex, monthIndex, $event, item.id, item.cells[monthIndex].id)"
+               [value]="!item.hidePrice ? item.cells[monthIndex]?.price.pricePerUnit : item.cells[monthIndex]?.price.unitCount || 1"
+               type="number"/>
 
-        <!-- Display pricePerUnit if nestingLevel is less than 2 -->
-        <span *ngIf="item.nestingLevel < 2">{{item.cells[monthIndex]?.price.pricePerUnit}}</span>
+        <span *ngIf="item.nestingLevel < 2">{{item.cells[monthIndex]?.price.priceInMoney}}</span>
       </td>
     </ng-container>
 
     <ng-container matColumnDef="total">
-      <th mat-header-cell *matHeaderCellDef >Total YEAR</th>
-      <td mat-cell *matCellDef="let item" [class]="getClass(item)">
-        <span *ngIf="item.nestingLevel <= 2">{{item.totalAmount.priceInMoney}}</span>
+      <th mat-header-cell *matHeaderCellDef>Total YEAR</th>
+      <td mat-cell *matCellDef="let item; let i = index" [class]="getClass(item)">
+        <span *ngIf="i < (categories.length-3)">{{item.hidePrice? item.totalAmount.unitCount: item.totalAmount.priceInMoney}}</span>
+        <span *ngIf="i >= (categories.length-3)">{{ item.totalAmount.priceInMoney}}</span>
       </td>
     </ng-container>
 

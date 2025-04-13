@@ -61,6 +61,7 @@ export class AddCategoryComponent implements OnInit {
     /** The “value types” for the category, e.g. MONEY, WEIGHT, etc. */
     valueType: string[];
     toAllMonths: boolean;
+    taxDisable: boolean;
   } = {
     name: '',
     nestedLevel: '0',
@@ -82,6 +83,7 @@ export class AddCategoryComponent implements OnInit {
     parentId: null,
     valueType: [],
     toAllMonths: true,
+    taxDisable: false,
   };
 
   constructor(
@@ -212,5 +214,10 @@ export class AddCategoryComponent implements OnInit {
     this.newCategory.oct = value;
     this.newCategory.nov = value;
     this.newCategory.dec = value;
+  }
+
+  disableTaxAndSetNUll() {
+    this.newCategory.taxRate = 0;
+    this.newCategory.taxDisable = !this.newCategory.taxDisable
   }
 }

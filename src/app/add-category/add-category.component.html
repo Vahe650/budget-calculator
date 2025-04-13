@@ -76,9 +76,19 @@
       </div>
     </div>
 
-    <div class="form-group col-4">
-      <label for="category-tax">Tax:</label>
-      <input type="number" id="category-tax" [(ngModel)]="newCategory.taxRate"/>
+    <div class="form-group row">
+      <div class="col-4">
+        <label for="category-tax">Tax:</label>
+        <input type="number" id="category-tax"
+               [disabled]="newCategory.taxDisable"
+               [(ngModel)]="newCategory.taxRate"/>
+      </div>
+      <div class="col-4">
+        <input
+               (change)="disableTaxAndSetNUll()"
+               type="checkbox" id="apply-tax" style="margin-top: 20%;"/>
+        <label for="apply-tax" class="type-label">Alga</label>
+      </div>
     </div>
 
     <div class="form-group row">
@@ -90,10 +100,6 @@
         <input [(ngModel)]="newCategory.toAllMonths" type="checkbox" id="apply-value" style="margin-top: 20%;"/>
         <label for="apply-value" class="type-label">Apply value to all months</label>
       </div>
-    </div>
-
-    <div class="form-group col-12">
-
     </div>
 
 

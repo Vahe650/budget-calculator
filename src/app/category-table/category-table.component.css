@@ -81,7 +81,7 @@ tbody td {
 }
 
 
-input {
+.number-input {
   border: 0;
   outline: 0;
   height: 60px;
