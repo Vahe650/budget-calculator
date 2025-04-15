@@ -11,6 +11,7 @@ import {ActivatedRoute} from "@angular/router";
 import {FormGroup} from "@angular/forms";
 import {CategoryDescription} from "../model/CategoryDescription";
 import {BudgetService} from "../service/budget.service";
+import {MonthUtil} from "../util/month-util";
 
 
 @Component({
@@ -33,10 +34,6 @@ export class CategoryTableComponent implements OnInit {
     'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'total', 'delete', 'expand'
   ];
 
-  months = [
-    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-    'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
-  ];
 
   // Tracks whether the input is focused
   isInputFocused = false;
@@ -53,6 +50,7 @@ export class CategoryTableComponent implements OnInit {
   public dataSource: MatTableDataSource<Categ>;
 
   forms: Array<FormGroup> [] [] = [];
+  months = new MonthUtil().monthsShort()
 
 
   constructor(
@@ -71,7 +69,7 @@ export class CategoryTableComponent implements OnInit {
     this.activatedRoute.params.subscribe(params => {
       if (params['id']) {
         this.budgetId = params['id'];
-        this.budgetService.getById(this.budgetId).subscribe(budget=>{
+        this.budgetService.getById(this.budgetId).subscribe(budget => {
           this.categoryService.getAllCategories(this.budgetId).subscribe({
             next: (response) => {
               this.budgetName = budget.name;
@@ -81,7 +79,6 @@ export class CategoryTableComponent implements OnInit {
                 this.drawTable(categoryDtos);
               } else {
                 this.dataSource = new MatTableDataSource<Categ>([]);
-
               }
             },
             error: (err) => {
@@ -107,7 +104,6 @@ export class CategoryTableComponent implements OnInit {
       return 0;
     });
     this.categories = categories
-
     this.dataSource = new MatTableDataSource<Categ>(categories);
   }
 
@@ -117,14 +113,11 @@ export class CategoryTableComponent implements OnInit {
     addEbit = true
   ): Categ[] {
 
-    const monthOrder: Record<string, number> = {
-      JANUARY: 1, FEBRUARY: 2, MARCH: 3, APRIL: 4,
-      MAY: 5, JUNE: 6, JULY: 7, AUGUST: 8,
-      SEPTEMBER: 9, OCTOBER: 10, NOVEMBER: 11, DECEMBER: 12,
-    };
+    let monthUtil = new MonthUtil();
+    const monthOrder = monthUtil.monthOrder()
 
-    const calculatePriceInMoney = (unitCount: number, pricePerUnit: number) => {
-      return (unitCount === 0 || unitCount == null) ? 1 : unitCount * pricePerUnit;
+    const calculatePricePerUnit = (pricePerUnit: number, unitCount: number) => {
+      return pricePerUnit / unitCount;
     };
 
     categories.forEach(category => {
@@ -137,16 +130,16 @@ export class CategoryTableComponent implements OnInit {
 
         category.childCategories.forEach(child => {
           child.cells.forEach(cell => {
-            const unitCount = (cell.price.unitCount === 0 || cell.price.unitCount == null) ? 1 : cell.price.unitCount;
-            const pricePerUnit = cell.price.pricePerUnit || 0; // Default to 0 if pricePerUnit is falsy
+            const unitCount = cell.price.unitCount;
+            const priceInMoney = cell.price.priceInMoney;
 
             if (!priceMap.has(cell.month)) {
               priceMap.set(cell.month, {priceInMoney: 0, pricePerUnit: 0, unitCount: 0});
             }
 
             const current = priceMap.get(cell.month)!;
-            current.priceInMoney += calculatePriceInMoney(unitCount, pricePerUnit); // Correct price calculation
-            current.pricePerUnit += pricePerUnit;
+            current.priceInMoney += priceInMoney
+            current.pricePerUnit += calculatePricePerUnit(priceInMoney, unitCount); // Correct price calculation
             current.unitCount += unitCount;
           });
         });
@@ -166,7 +159,7 @@ export class CategoryTableComponent implements OnInit {
             0
           ),
           unitCount: category.cells.reduce(
-            (sum, cell) => sum + (cell.price.unitCount || 1),  // Ensure unitCount is not 0
+            (sum, cell) => sum + (cell.price.unitCount),  // Ensure unitCount is not 0
             0
           ),
         };
@@ -175,11 +168,11 @@ export class CategoryTableComponent implements OnInit {
 
         category.totalAmount = {
           priceInMoney: category.cells.reduce(
-            (sum, cell) => sum + (calculatePriceInMoney((cell.price.unitCount === 0 || cell.price.unitCount == null) ? 1 : cell.price.unitCount, cell.price.pricePerUnit)),
+            (sum, cell) => sum + cell.price.priceInMoney,
             0
           ),
           unitCount: category.cells.reduce(
-            (sum, cell) => sum + (cell.price.unitCount || 1),  // Ensure unitCount is not 0
+            (sum, cell) => sum + (cell.price.unitCount),  // Ensure unitCount is not 0
             0
           ),
         };
@@ -189,14 +182,52 @@ export class CategoryTableComponent implements OnInit {
     if (addEbit) {
       const level0Categories = flatList.filter(c => c.nestingLevel === 0);
       if (level0Categories.length >= 1) {
-        const income = level0Categories.find(c => c.categoryDescription === CategoryDescription.INCOME);
-        const expenses = level0Categories.find(c => c.categoryDescription === CategoryDescription.EXPENSES);
-        const amortizations = level0Categories.find(c => c.categoryDescription === CategoryDescription.AMORTIZATIONS);
-        const depreciation = level0Categories.find(c => c.categoryDescription === CategoryDescription.DEPRECIATION);
-        const tax = level0Categories.find(c => c.categoryDescription === CategoryDescription.TAX);
-        const interest = level0Categories.find(c => c.categoryDescription === CategoryDescription.INTEREST);
+        // Initialize categories with default values if not found
+        const getCategoryWithDefault = (categoryDescription: string): Categ => {
+          // Find the category by category description
+          const category = level0Categories.find(c => c.categoryDescription === categoryDescription);
+          if (category) {
+            return category;
+          }
 
-        const financialResults = level0Categories.find(c => c.financialResults && c.financialResults.length > 0)?.financialResults;
+          // If the category is found, return it, otherwise return a default category
+          return {
+            id: 0, // default id
+            name: categoryDescription, // Default name based on category description
+            taxRate: 0, // default tax rate
+            primaryType: 'MONEY', // assuming 'MONEY' as default primaryType
+            additionalType: null, // assuming no additionalType
+            nestingLevel: 0, // assuming 0 for default nestingLevel`
+            position: 0, // default position
+            totalAmount: {priceInMoney: 0, unitCount: 0}, // default totalAmount
+            cells: monthUtil.months().map(m => {
+              return {
+                id: 0,  // Default ID for cells
+                month: m,  // Default month
+                price: this.getDefaultPrice()
+              }
+            }), // default cells
+            childCategories: [], // default child categories
+            financialResults: [], // default financialResults
+            expandable: false, // default expandable
+            expanded: false, // default expanded
+            hidden: false, // default hidden
+            hidePrice: true, // default hidePrice
+            categoryDescription: null, // default categoryDescription
+
+          };
+        };
+
+
+        const income = getCategoryWithDefault(CategoryDescription.INCOME);
+        const expenses = getCategoryWithDefault(CategoryDescription.EXPENSES);
+        const amortizations = getCategoryWithDefault(CategoryDescription.AMORTIZATIONS);
+        const depreciation = getCategoryWithDefault(CategoryDescription.DEPRECIATION);
+        const tax = getCategoryWithDefault(CategoryDescription.TAX);
+        const interest = getCategoryWithDefault(CategoryDescription.INTEREST);
+
+        let financialResults = level0Categories.find(c => c.financialResults && c.financialResults.length > 0)?.financialResults;
+
 
         if (financialResults && financialResults.length) {
           financialResults.forEach(financialResult => {
@@ -210,20 +241,21 @@ export class CategoryTableComponent implements OnInit {
                 // EBITDA = Income - Expenses
                 if (income && expenses) {
                   diffCells = income.cells.map((cell, idx) => {
-                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month);
-                    const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
-
-                    const expensePrice = correspondingExpense?.price || fallback.price;
-                    const cellUnitCount = cell.price.unitCount === 0 ? 1 : cell.price.unitCount;
+                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
+                    };
+                    const expensePrice = correspondingExpense.price;
+                    const cellUnitCount = cell.price.unitCount;
 
                     return {
                       id: cell.id,
                       month: cell.month,
                       price: {
-                        priceInMoney: calculatePriceInMoney(cellUnitCount, cell.price.pricePerUnit) - calculatePriceInMoney(expensePrice.unitCount, expensePrice.pricePerUnit),
-                        pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit,
-                        unitCount: cellUnitCount - expensePrice.unitCount,
+                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney,
+                        pricePerUnit: 0,
+                        unitCount: 0,
                       }
+
                     };
                   });
 
@@ -236,28 +268,28 @@ export class CategoryTableComponent implements OnInit {
                 // EBIT = Income - Expenses - Amortizations - Depreciation
                 if (income && expenses && amortizations && depreciation) {
                   diffCells = income.cells.map((cell, idx) => {
-                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month);
-                    const correspondingAmortization = amortizations.cells.find(c => c.month === cell.month);
-                    const correspondingDepreciation = depreciation.cells.find(c => c.month === cell.month);
+                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
+                    };
+                    const correspondingAmortization = amortizations.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
+                    };
+                    const correspondingDepreciation = depreciation.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
+                    };
 
-                    const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
-
-                    const expensePrice = correspondingExpense?.price || fallback.price;
-                    const amortizationPrice = correspondingAmortization?.price || fallback.price;
-                    const depreciationPrice = correspondingDepreciation?.price || fallback.price;
-
-                    const cellUnitCount = cell.price.unitCount === 0 ? 1 : cell.price.unitCount;
+                    const expensePrice = correspondingExpense.price;
+                    const amortizationPrice = correspondingAmortization.price;
+                    const depreciationPrice = correspondingDepreciation.price;
 
                     return {
                       id: cell.id,
                       month: cell.month,
                       price: {
-                        priceInMoney: calculatePriceInMoney(cellUnitCount, cell.price.pricePerUnit) -
-                          calculatePriceInMoney(expensePrice.unitCount, expensePrice.pricePerUnit) -
-                          calculatePriceInMoney(amortizationPrice.unitCount, amortizationPrice.pricePerUnit) -
-                          calculatePriceInMoney(depreciationPrice.unitCount, depreciationPrice.pricePerUnit),
-                        pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit - amortizationPrice.pricePerUnit - depreciationPrice.pricePerUnit,
-                        unitCount: cellUnitCount - expensePrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount,
+                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney -
+                          amortizationPrice.priceInMoney - depreciationPrice.priceInMoney,
+                        pricePerUnit: 0,
+                        unitCount: 0,
                       }
                     };
                   });
@@ -271,34 +303,41 @@ export class CategoryTableComponent implements OnInit {
                 // Net Profit = Income - Expenses - Tax - Amortizations - Depreciation - Interest
                 if (income && expenses && tax && amortizations && depreciation && interest) {
                   diffCells = income.cells.map((cell, idx) => {
-                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month);
-                    const correspondingTax = tax.cells.find(c => c.month === cell.month);
-                    const correspondingAmortization = amortizations.cells.find(c => c.month === cell.month);
-                    const correspondingDepreciation = depreciation.cells.find(c => c.month === cell.month);
-                    const correspondingInterest = interest.cells.find(c => c.month === cell.month);
+                    const correspondingExpense = expenses.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
+                    };
+                    const correspondingTax = tax.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
 
-                    const fallback = {price: {priceInMoney: 0, pricePerUnit: 0, unitCount: 0}};
+                    };
+                    const correspondingAmortization = amortizations.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
 
-                    const expensePrice = correspondingExpense?.price || fallback.price;
-                    const taxPrice = correspondingTax?.price || fallback.price;
-                    const amortizationPrice = correspondingAmortization?.price || fallback.price;
-                    const depreciationPrice = correspondingDepreciation?.price || fallback.price;
-                    const interestPrice = correspondingInterest?.price || fallback.price;
+                    };
+                    const correspondingDepreciation = depreciation.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
 
-                    const cellUnitCount = cell.price.unitCount === 0 ? 1 : cell.price.unitCount;
+                    };
+                    const correspondingInterest = interest.cells.find(c => c.month === cell.month) || {
+                      price: this.getDefaultPrice()
+
+                    };
+
+                    const expensePrice = correspondingExpense.price;
+                    const taxPrice = correspondingTax.price;
+                    const amortizationPrice = correspondingAmortization.price;
+                    const depreciationPrice = correspondingDepreciation.price;
+                    const interestPrice = correspondingInterest.price;
+
 
                     return {
                       id: cell.id,
                       month: cell.month,
                       price: {
-                        priceInMoney: calculatePriceInMoney(cellUnitCount, cell.price.pricePerUnit) -
-                          calculatePriceInMoney(expensePrice.unitCount, expensePrice.pricePerUnit) -
-                          calculatePriceInMoney(taxPrice.unitCount, taxPrice.pricePerUnit) -
-                          calculatePriceInMoney(amortizationPrice.unitCount, amortizationPrice.pricePerUnit) -
-                          calculatePriceInMoney(depreciationPrice.unitCount, depreciationPrice.pricePerUnit) -
-                          calculatePriceInMoney(interestPrice.unitCount, interestPrice.pricePerUnit),
-                        pricePerUnit: cell.price.pricePerUnit - expensePrice.pricePerUnit - taxPrice.pricePerUnit - amortizationPrice.pricePerUnit - depreciationPrice.pricePerUnit - interestPrice.pricePerUnit,
-                        unitCount: cellUnitCount - expensePrice.unitCount - taxPrice.unitCount - amortizationPrice.unitCount - depreciationPrice.unitCount - interestPrice.unitCount,
+                        priceInMoney: cell.price.priceInMoney - expensePrice.priceInMoney - taxPrice.priceInMoney -
+                          amortizationPrice.priceInMoney - depreciationPrice.priceInMoney - interestPrice.priceInMoney,
+                        pricePerUnit: 0,
+                        unitCount: 0
                       }
                     };
                   });
@@ -332,6 +371,8 @@ export class CategoryTableComponent implements OnInit {
           });
         }
       }
+
+      return flatList;
     }
 
     return flatList;
@@ -425,15 +466,15 @@ export class CategoryTableComponent implements OnInit {
   onPricePerUnitChange(unitType: string, elIndex: number, monthIndex: number, event: Event, id: number, cellId: number): void {
 
     let value = Number((event.target as HTMLInputElement).value);
-    if (unitType === 'pricePerUnit') {
-      this.categories[elIndex].cells[monthIndex].price.pricePerUnit = value;
+    if (unitType === 'priceInMoney') {
+      this.categories[elIndex].cells[monthIndex].price.priceInMoney = value;
+      this.categories[elIndex].cells[monthIndex].price.unitCount = value / this.categories[elIndex].cells[monthIndex].price.pricePerUnit;
     } else {
       this.categories[elIndex].cells[monthIndex].price.unitCount = value
+      this.categories[elIndex].cells[monthIndex].price.priceInMoney = value * this.categories[elIndex].cells[monthIndex].price.pricePerUnit;
     }
     this.updateCategoryResponse(id, cellId, value, unitType);
 
-    this.categories[elIndex].cells[monthIndex].price.priceInMoney =
-      this.categories[elIndex].cells[monthIndex].price.unitCount * this.categories[elIndex].cells[monthIndex].price.pricePerUnit;
   }
 
   updateCategoryResponse(id: number, cellId: number, value: number, unitType: string) {
@@ -443,8 +484,8 @@ export class CategoryTableComponent implements OnInit {
           if (c.id === id) {
             c.cells.forEach(cell => {
               if (cell.id === cellId) {
-                if (unitType === 'pricePerUnit') {
-                  cell.price.pricePerUnit = value;
+                if (unitType === 'priceInMoney') {
+                  cell.price.priceInMoney = value;
                 } else {
                   cell.price.unitCount = value;
                 }
@@ -472,5 +513,11 @@ export class CategoryTableComponent implements OnInit {
 
   onChange($event: Event, item: Categ) {
     item.hidePrice = !item.hidePrice;
+  }
+
+  getDefaultPrice(): Price {
+    return {
+      priceInMoney: 0, pricePerUnit: 0, unitCount: 0
+    }
   }
 }

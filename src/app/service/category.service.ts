@@ -42,8 +42,8 @@ export class CategoryService {
     return this.http.get<any>(this.categoriesApiUrl + `?budgetId=${budgetId}`);
   }
 
-  getCategoriesByNestingLevel(nestingLevel: number, parentId: number | string): Observable<any> {
-    return this.http.get<any>(this.categoryApiUrl + `?nestingLevel=${nestingLevel}&parentId=${parentId}`);
+  getCategoriesByNestingLevel(nestingLevel: number, parentId: number | string, budgetId: number): Observable<any> {
+    return this.http.get<any>(this.categoryApiUrl + `?nestingLevel=${nestingLevel}&parentId=${parentId}&budgetId=${budgetId}`);
   }
 
   updateCells(requestBody: Categ[]): Observable<any> {

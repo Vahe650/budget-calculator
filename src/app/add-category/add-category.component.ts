@@ -54,7 +54,7 @@ export class AddCategoryComponent implements OnInit {
     expandable: boolean;
     expanded: boolean;
     categoryDescription: CategoryDescription | null;
-    budgetId: number | null;
+    budgetId: number;
     parentId: number | null;
     /** The “value types” for the category, e.g. MONEY, WEIGHT, etc. */
     valueType: string[];
@@ -77,7 +77,7 @@ export class AddCategoryComponent implements OnInit {
     expandable: false,
     expanded: false,
     categoryDescription: null,
-    budgetId: null,
+    budgetId: 0,
     parentId: null,
     valueType: [],
     toAllMonths: true,
@@ -96,6 +96,11 @@ export class AddCategoryComponent implements OnInit {
    * in the <select> dropdowns for “Budget” and “Parent” fields.
    */
   ngOnInit(): void {
+    this.activatedRoute.params.subscribe(params => {
+      if (params['id']) {
+        this.newCategory.budgetId = params['id'];
+      }
+    });
 
   }
 
@@ -103,10 +108,7 @@ export class AddCategoryComponent implements OnInit {
    * User clicks “Save” => build category data => call createCategory => navigate
    */
   saveCategory() {
-    this.activatedRoute.params.subscribe(params => {
-      if (params['id']) {
-        this.newCategory.budgetId = params['id'];
-      }
+
       const categoryData
         = {
         ...this.newCategory,
@@ -123,7 +125,7 @@ export class AddCategoryComponent implements OnInit {
           console.error('Error creating category:', err);
         }
       });
-    })
+
   }
 
   cancel() {
@@ -177,10 +179,10 @@ export class AddCategoryComponent implements OnInit {
   getCategories(event: any) {
     var categories = null;
     if (this.newCategory.nestedLevel === '1') {
-      categories = this.categoryService.getCategoriesByNestingLevel(0, '');
+      categories = this.categoryService.getCategoriesByNestingLevel(0, '', this.newCategory.budgetId);
     }
     if (this.newCategory.nestedLevel === '2') {
-      categories = this.categoryService.getCategoriesByNestingLevel(1, '');
+      categories = this.categoryService.getCategoriesByNestingLevel(1, '', this.newCategory.budgetId);
     }
     if (categories) {
       categories.subscribe({
