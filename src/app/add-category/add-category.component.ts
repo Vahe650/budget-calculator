@@ -4,6 +4,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {CategoryService} from '../service/category.service';
 import {FormsModule} from '@angular/forms';
 import {CategoryDescription} from "../model/CategoryDescription";
+import {BudgetService} from "../service/budget.service";
 
 @Component({
   selector: 'app-add-category',
@@ -25,8 +26,10 @@ export class AddCategoryComponent implements OnInit {
     CategoryDescription.AMORTIZATIONS,
     CategoryDescription.EXPENSES,
     CategoryDescription.INTEREST,
-
   ];
+
+  budgetName: string = '';
+  budgetYear: number = 0;
 
   newCategory: {
     name: string;
@@ -87,6 +90,7 @@ export class AddCategoryComponent implements OnInit {
   constructor(
     private router: Router,
     private categoryService: CategoryService,
+    private budgetService: BudgetService,
     private activatedRoute: ActivatedRoute,
   ) {
   }
@@ -99,6 +103,25 @@ export class AddCategoryComponent implements OnInit {
     this.activatedRoute.params.subscribe(params => {
       if (params['id']) {
         this.newCategory.budgetId = params['id'];
+        this.budgetService.getById(this.newCategory.budgetId).subscribe(budget => {
+            this.newCategory.budgetId = params['budgetId'];
+            this.budgetName = budget.name;
+            this.budgetYear = budget.year;
+          if (params['categoryId'] && params['budgetId']) {
+            this.categoryService.getCategory(params['categoryId']).subscribe({
+              next: (res) => {
+                console.log(res);
+                this.newCategory = res;
+                this.newCategory.taxRate = res.taxRate === null ? 0 : res.taxRate;
+                this.newCategory.taxDisable = res.taxRate === null ? true : false;
+              },
+              error: (err) => {
+                console.error('Error loading category:', err);
+              }
+            });
+
+          }
+        });
       }
     });
 
@@ -109,22 +132,22 @@ export class AddCategoryComponent implements OnInit {
    */
   saveCategory() {
 
-      const categoryData
-        = {
-        ...this.newCategory,
-        unitPrice: this.generateUnitPrices(),
-        isAutocomplete: false,
-        taxRate: this.newCategory.taxRate === 0 ? null : this.newCategory.taxRate,
-      };
+    const categoryData
+      = {
+      ...this.newCategory,
+      unitPrice: this.generateUnitPrices(),
+      isAutocomplete: false,
+      taxRate: this.newCategory.taxRate === 0 ? null : this.newCategory.taxRate,
+    };
 
-      this.categoryService.createCategory(categoryData).subscribe({
-        next: (response) => {
-          this.router.navigate(['/budgets/' + this.newCategory.budgetId]);
-        },
-        error: (err) => {
-          console.error('Error creating category:', err);
-        }
-      });
+    this.categoryService.createCategory(categoryData).subscribe({
+      next: (response) => {
+        this.router.navigate(['/budgets/' + this.newCategory.budgetId]);
+      },
+      error: (err) => {
+        console.error('Error creating category:', err);
+      }
+    });
 
   }
 
@@ -232,7 +255,7 @@ export class AddCategoryComponent implements OnInit {
     if (this.newCategory.nestedLevel === '2') {
       return this.newCategory.name !== '' && this.newCategory.parentId !== null
         && (this.newCategory.unitMoney && (this.newCategory.unitTons || this.newCategory.unitLiters || this.newCategory.unitPieces))
-        && this.newCategory.jan !== 0
+        && (this.newCategory.jan !== 0 || !this.newCategory.toAllMonths)
     }
     return false;
   }

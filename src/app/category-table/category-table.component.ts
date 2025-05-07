@@ -7,7 +7,7 @@ import {MatInputModule} from '@angular/material/input';
 
 import {CategoryService} from '../service/category.service';
 import {Categ, Cell, FinancialCell, Price} from "../model/Price";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {FormGroup} from "@angular/forms";
 import {CategoryDescription} from "../model/CategoryDescription";
 import {BudgetService} from "../service/budget.service";
@@ -31,7 +31,7 @@ export class CategoryTableComponent implements OnInit {
 
   displayedColumns = [
     'name', 'tax', 'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-    'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'total', 'delete', 'expand'
+    'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'total', 'delete', 'edit'
   ];
 
 
@@ -46,6 +46,7 @@ export class CategoryTableComponent implements OnInit {
 
   budgetId: number = 0;
   budgetName: string = '';
+  budgetYear: number = 0;
 
   public dataSource: MatTableDataSource<Categ>;
 
@@ -57,6 +58,7 @@ export class CategoryTableComponent implements OnInit {
     private categoryService: CategoryService,
     private budgetService: BudgetService,
     private activatedRoute: ActivatedRoute,
+    private router: Router,
   ) {
     this.dataSource = new MatTableDataSource<Categ>([]);
   }
@@ -73,6 +75,7 @@ export class CategoryTableComponent implements OnInit {
           this.categoryService.getAllCategories(this.budgetId).subscribe({
             next: (response) => {
               this.budgetName = budget.name;
+              this.budgetYear = budget.year;
               this.categoryResponse = response as Categ[];
               const categoryDtos = response as Categ[];
               if (categoryDtos.length > 0) {
@@ -400,7 +403,6 @@ export class CategoryTableComponent implements OnInit {
 
 
   deleteCategory(node: Categ) {
-    if (node.nestingLevel === 2) return;
     this.categoryService.deleteCategory(node.id).subscribe({
       next: (response) => {
         this.getAllCategories()
@@ -519,5 +521,9 @@ export class CategoryTableComponent implements OnInit {
     return {
       priceInMoney: 0, pricePerUnit: 0, unitCount: 0
     }
+  }
+
+  editCategory(id: number) {
+    this.router.navigate(['edit-category/' + id + '/' + this.budgetId])
   }
 }

@@ -54,6 +54,13 @@ th.mat-header-cell {
   padding: 4px 8px;
 }
 
+.edit-button {
+  background-color: #5bdc1b;
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
 .example-toggle-button-expanded {
   transform: rotate(180deg);
   transition: transform 0.3s;
@@ -157,4 +164,8 @@ input:focus {
   border: 1px solid #ccc;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.blue-color {
+  background-color: dodgerblue;
 }
